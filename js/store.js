@@ -6,7 +6,7 @@ import { isISO, isYM } from './core/dates.js';
 
 export const KEY = 'chamony.data.v1';
 export const PREV_KEY = 'chamony.data.v1.anterior'; // cópia automática antes de importar/restaurar
-export const SCHEMA = 1;
+export const SCHEMA = 2;
 
 export const CAT_COLORS = ['#F9C5D1', '#FFD9B8', '#FFF0B3', '#CDEBC5', '#BFE3D0', '#BCD7F5', '#D6D0F5', '#E4D4F4', '#F5D0E8', '#D9D9E3'];
 export const ACCENT_COLORS = ['#F4A7B9', '#B9A6EE', '#8EC5F0', '#8FD3B6', '#F5CF7A', '#F4A08A', '#7484A0', '#A3B79A', '#E7A8D8', '#A7B0C2'];
@@ -16,22 +16,29 @@ export const CAT_ICONS = ['fa-cart-shopping', 'fa-utensils', 'fa-mug-hot', 'fa-b
 export const BANK_ICONS = ['fa-building-columns', 'fa-piggy-bank', 'fa-vault', 'fa-wallet', 'fa-coins', 'fa-seedling', 'fa-star', 'fa-heart'];
 
 export const DEFAULT_SETTINGS = {
-  palette: 'A',          // 'A' (AeroSync) | 'B' (manteiga/sálvia/creme)
-  customAccent: null,    // cor de destaque personalizada (motor de temas)
+  theme: { preset: 'camomila', customs: [], bg: 'gradient' }, // paleta pronta ou 'custom:<id>'; fundo do app
   dark: 'system',        // 'system' | 'light' | 'dark'
   layout: 'full',        // 'full' (painel completo) | 'airy' (tela respirada)
   tone: 'warm',          // 'warm' | 'neutral' | 'playful'
   hideOnOpen: false,     // abrir com valores escondidos
   splash: true,          // animação de abertura
   dueWarnDays: 5,        // avisar vencimentos de cartão com N dias de antecedência
+  addMode: 'modal',      // 'modal' (formulário do AeroSync) | 'keypad' (teclado numérico + favoritos)
+  iconSet: 'fa',         // 'fa' (Font Awesome) | 'own' (conjunto próprio arredondado)
+  sound: false,          // sons suaves
+  vibration: true,       // vibração leve
+  achievements: 'both',  // 'badges' (selos e níveis) | 'garden' (jardim) | 'both'
+  notifications: false,  // lembretes com notificação do sistema
+  lastSyncAt: null,      // última sincronização por arquivo
 };
+export const BG_OPTIONS = ['plain', 'gradient', 'dots', 'flowers'];
 
 export function defaults() {
   return {
     schema: SCHEMA,
     createdAt: new Date().toISOString(),
     settings: { ...DEFAULT_SETTINGS },
-    budget: { monthlyLimit: 0 },
+    budget: { monthlyLimit: 0, catLimits: {} },
     salary: { base: 0, usable: true, overrides: {} },
     incomes: [],
     banks: [
@@ -48,6 +55,13 @@ export function defaults() {
     trash: [],
     bills: [],      // contas com lembrete (o "recurring" do AeroSync): { id, name, amount, day, warnDays }
     simItems: [],
+    goals: [],          // metas de economia: { id, name, target, deadline, color, icon, deposits: [{ id, date, amount }] }
+    wishes: [],         // lista de desejos: { id, name, price, priority, link, note, boughtAt }
+    subscriptions: [],  // assinaturas: { id, name, amount, day, cycle, month, cardId, catId, active }
+    debts: [],          // dívidas/empréstimos: { id, kind: 'owe'|'owed', person, desc, total, installments, dueDay, payments: [] }
+    investments: [],    // investimentos: { id, name, kind, color, entries: [{ id, date, type, amount }] }
+    favorites: [],      // gastos favoritos (teclado numérico): { id, desc, amount, catId, cardId }
+    game: { unlocked: {} }, // conquistas desbloqueadas: { [id]: dataISO }
     meta: { importedFrom: [] },
   };
 }
@@ -81,7 +95,9 @@ export function normalizeExpense(e) {
     instIndex: clampInt(e.instIndex, 1, instTotal, 1),
     instTotal,
     recurring: !!e.recurring,
-    note: str(e.note, 500),
+    note: str(e.note, 1000),
+    tags: arr(e.tags).filter((t) => typeof t === 'string' && t.trim()).map((t) => t.trim().slice(0, 30)).slice(0, 12),
+    ...(e.receiptId ? { receiptId: str(e.receiptId, 80) } : {}),
     createdAt: str(e.createdAt, 40) || new Date().toISOString(),
     ...(e.deletedAt ? { deletedAt: str(e.deletedAt, 40) } : {}),
     ...(e.source ? { source: str(e.source, 40) } : {}),
@@ -96,16 +112,25 @@ export function normalize(raw) {
     schema: SCHEMA,
     createdAt: str(raw.createdAt, 40) || d.createdAt,
     settings: {
-      palette: ['A', 'B'].includes(s.palette) ? s.palette : 'A',
-      customAccent: isColor(s.customAccent) ? s.customAccent : null,
+      theme: normTheme(s.theme),
       dark: ['system', 'light', 'dark'].includes(s.dark) ? s.dark : 'system',
       layout: ['full', 'airy'].includes(s.layout) ? s.layout : 'full',
       tone: ['warm', 'neutral', 'playful'].includes(s.tone) ? s.tone : 'warm',
       hideOnOpen: !!s.hideOnOpen,
       splash: s.splash !== false,
       dueWarnDays: clampInt(s.dueWarnDays, 1, 15, 5),
+      addMode: s.addMode === 'keypad' ? 'keypad' : 'modal',
+      iconSet: s.iconSet === 'own' ? 'own' : 'fa',
+      sound: !!s.sound,
+      vibration: s.vibration !== false,
+      achievements: ['badges', 'garden', 'both'].includes(s.achievements) ? s.achievements : 'both',
+      notifications: !!s.notifications,
+      lastSyncAt: str(s.lastSyncAt, 40) || null,
     },
-    budget: { monthlyLimit: Math.max(0, int(raw.budget?.monthlyLimit)) },
+    budget: {
+      monthlyLimit: Math.max(0, int(raw.budget?.monthlyLimit)),
+      catLimits: Object.fromEntries(Object.entries(raw.budget?.catLimits || {}).filter(([k, v]) => k && Number.isFinite(v) && v > 0).map(([k, v]) => [k, Math.round(v)])),
+    },
     salary: {
       base: Math.max(0, int(raw.salary?.base)),
       usable: raw.salary?.usable !== false,
@@ -134,10 +159,56 @@ export function normalize(raw) {
       id: str(x.id, 80) || uid('s'), name: str(x.name, 80, 'Item'), total: int(x.total), inst: clampInt(x.inst, 1, 120, 1),
       rate: Number.isFinite(x.rate) ? Math.max(0, x.rate) : 0, monthly: int(x.monthly), totalWithInterest: int(x.totalWithInterest),
     })),
+    goals: arr(raw.goals).filter((g) => g && typeof g.name === 'string').map((g) => ({
+      id: str(g.id, 80) || uid('goal'), name: str(g.name, 80), target: Math.max(0, int(g.target)), deadline: isISO(g.deadline) ? g.deadline : '',
+      color: col(g.color, '#CDEBC5'), icon: ico(g.icon, 'fa-piggy-bank'), createdAt: str(g.createdAt, 40) || new Date().toISOString(),
+      doneAt: str(g.doneAt, 40) || null, deposits: moves(g.deposits),
+    })),
+    wishes: arr(raw.wishes).filter((w) => w && typeof w.name === 'string').map((w) => ({
+      id: str(w.id, 80) || uid('w'), name: str(w.name, 80), price: Math.max(0, int(w.price)), priority: clampInt(w.priority, 1, 3, 2),
+      link: /^https?:\/\//i.test(w.link || '') ? str(w.link, 500) : '', note: str(w.note, 500), createdAt: str(w.createdAt, 40) || new Date().toISOString(),
+      boughtAt: str(w.boughtAt, 40) || null,
+    })),
+    subscriptions: arr(raw.subscriptions).filter((x) => x && typeof x.name === 'string').map((x) => ({
+      id: str(x.id, 80) || uid('sub'), name: str(x.name, 80), amount: Math.max(0, int(x.amount)), day: clampInt(x.day, 1, 31, 1),
+      cycle: x.cycle === 'yearly' ? 'yearly' : 'monthly', month: clampInt(x.month, 1, 12, 1), cardId: str(x.cardId, 80) || 'pix',
+      catId: str(x.catId, 80), color: col(x.color, '#D6D0F5'), active: x.active !== false,
+    })),
+    debts: arr(raw.debts).filter((x) => x && (x.person || x.desc)).map((x) => ({
+      id: str(x.id, 80) || uid('debt'), kind: x.kind === 'owed' ? 'owed' : 'owe', person: str(x.person, 80), desc: str(x.desc, 120),
+      total: Math.max(0, int(x.total)), installments: clampInt(x.installments, 1, 360, 1), dueDay: clampInt(x.dueDay, 0, 31, 0),
+      createdAt: str(x.createdAt, 40) || new Date().toISOString(), closedAt: str(x.closedAt, 40) || null, payments: moves(x.payments),
+    })),
+    investments: arr(raw.investments).filter((x) => x && typeof x.name === 'string').map((x) => ({
+      id: str(x.id, 80) || uid('inv'), name: str(x.name, 80), kind: str(x.kind, 40), color: col(x.color, '#BFE3D0'),
+      entries: arr(x.entries).filter((e) => e && isISO(e.date) && Number.isFinite(e.amount) && ['aporte', 'retirada', 'rendimento'].includes(e.type))
+        .map((e) => ({ id: str(e.id, 80) || uid('m'), date: e.date, type: e.type, amount: int(e.amount), note: str(e.note, 120) })),
+    })),
+    favorites: arr(raw.favorites).filter((f) => f && typeof f.desc === 'string').slice(0, 24).map((f) => ({
+      id: str(f.id, 80) || uid('fav'), desc: str(f.desc, 140), amount: Math.max(0, int(f.amount)), catId: str(f.catId, 80), cardId: str(f.cardId, 80) || 'pix',
+    })),
+    game: { unlocked: Object.fromEntries(Object.entries(raw.game?.unlocked || {}).filter(([k, v]) => typeof k === 'string' && typeof v === 'string')) },
     meta: { importedFrom: arr(raw.meta?.importedFrom).slice(-20) },
   };
   if (!out.categories.length) out.categories = d.categories;
   return out;
+}
+
+/** Movimentos genéricos (depósitos, pagamentos): { id, date, amount, note } */
+function moves(list) {
+  return arr(list).filter((m) => m && isISO(m.date) && Number.isFinite(m.amount))
+    .map((m) => ({ id: str(m.id, 80) || uid('m'), date: m.date, amount: int(m.amount), note: str(m.note, 120) }));
+}
+
+function normTheme(t) {
+  const th = t && typeof t === 'object' ? t : {};
+  const customs = arr(th.customs).filter((c) => c && isColor(c.accent) && isColor(c.page) && isColor(c.surface)).slice(0, 12).map((c) => ({
+    id: str(c.id, 40) || uid('p'), name: str(c.name, 30, 'Minha paleta'), accent: c.accent, page: c.page, surface: c.surface,
+    icon: isColor(c.icon) ? c.icon : c.accent,
+  }));
+  let preset = typeof th.preset === 'string' ? th.preset : 'camomila';
+  if (preset.startsWith('custom:') && !customs.some((c) => `custom:${c.id}` === preset)) preset = 'camomila';
+  return { preset: preset.slice(0, 60), customs, bg: BG_OPTIONS.includes(th.bg) ? th.bg : 'gradient' };
 }
 
 // ---------------------------------------------------------------------------
@@ -145,7 +216,20 @@ export function normalize(raw) {
 // Quando o schema mudar, adicione aqui e suba SCHEMA. Uma cópia é salva antes.
 // ---------------------------------------------------------------------------
 const MIGRATIONS = {
-  // 1: (data) => { ...; return data; },
+  // 1 → 2: motor de temas com paletas (A/B viram "camomila"/"manteiga"; a cor de destaque vira uma paleta própria)
+  //        e campos novos das fases 3 e 4 (preenchidos com vazio pela normalização).
+  1: (data) => {
+    const s = data.settings || {};
+    const preset = s.palette === 'B' ? 'manteiga' : 'camomila';
+    const theme = { preset, customs: [], bg: 'gradient' };
+    if (isColor(s.customAccent)) {
+      const base = preset === 'manteiga' ? { page: '#FBF5E6', surface: '#FFFEF9' } : { page: '#FBEFF2', surface: '#FFFDFD' };
+      theme.customs.push({ id: 'p1', name: 'Minha cor', accent: s.customAccent, icon: s.customAccent, ...base });
+      theme.preset = 'custom:p1';
+    }
+    const { palette, customAccent, ...rest } = s;
+    return { ...data, settings: { ...rest, theme } };
+  },
 };
 
 export function migrate(raw) {
@@ -177,7 +261,9 @@ export function load() {
   try { raw = localStorage.getItem(KEY); } catch { /* storage bloqueado: segue só em memória */ }
   if (!raw) { state = defaults(); return state; }
   try {
-    state = migrate(JSON.parse(raw));
+    const parsed = JSON.parse(raw);
+    state = migrate(parsed);
+    if (parsed.schema !== SCHEMA) safeSet(KEY, JSON.stringify(state)); // grava já no formato novo
   } catch (err) {
     // Dados ilegíveis: preserva o texto original numa chave à parte e começa limpo.
     console.error('ChaMony: dados ilegíveis, guardando cópia', err);

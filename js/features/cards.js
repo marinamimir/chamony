@@ -6,7 +6,7 @@ import { m, attachMoneyMask } from '../core/money.js';
 import { formatYM, dateInMonth, shortDate, shiftYM } from '../core/dates.js';
 import * as F from '../core/finance.js';
 import { ACCENT_COLORS } from '../store.js';
-import { monthBar, toggle, sectionHead } from '../ui/parts.js';
+import { monthBar, toggle, sectionHead, colorPicks, bindFreeColor } from '../ui/parts.js';
 import { emptyState } from '../ui/illustrations.js';
 import { openSheet, confirmSheet } from '../ui/sheet.js';
 import { toast } from '../ui/toast.js';
@@ -35,7 +35,7 @@ export function openCardForm(cardId = null) {
   const d = store.get();
   const c = d.cards.find((x) => x.id === cardId);
   const st = { color: c?.color || ACCENT_COLORS[d.cards.length % ACCENT_COLORS.length] };
-  const colors = () => ACCENT_COLORS.map((x) => `<button type="button" class="color-pick" data-color="${x}" style="--c:${x}" aria-pressed="${st.color === x}" aria-label="Cor ${x}"></button>`).join('');
+  const colors = () => colorPicks(ACCENT_COLORS, st.color);
   openSheet({
     title: c ? 'Editar cartão' : 'Novo cartão',
     body: `
@@ -51,6 +51,7 @@ export function openCardForm(cardId = null) {
       <button type="button" class="btn primary" data-save>${c ? 'Salvar' : 'Adicionar cartão'}</button></div>`,
     onMount(el, api) {
       const limit = attachMoneyMask(el.querySelector('#cf-limit'), c?.limit || 0);
+      bindFreeColor(el, (x) => { st.color = x; el.querySelector('#cf-colors').innerHTML = colors(); });
       el.addEventListener('click', async (e) => {
         const col = e.target.closest('[data-color]');
         if (col) { st.color = col.dataset.color; el.querySelector('#cf-colors').innerHTML = colors(); }

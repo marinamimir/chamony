@@ -9,10 +9,7 @@ body {
   font-size: var(--ui-type-base);
   line-height: 1.45;
   color: var(--ui-text);
-  background:
-    radial-gradient(120% 60% at 0% 0%, var(--page-2) 0%, transparent 60%),
-    radial-gradient(100% 60% at 100% 100%, color-mix(in srgb, var(--warm) 30%, transparent) 0%, transparent 70%),
-    var(--ui-page);
+  background: var(--ui-page);
   background-attachment: fixed;
   overscroll-behavior-y: none;
 }
@@ -151,3 +148,25 @@ a { color: var(--ui-accent); }
   *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; transition-duration: 1ms !important; }
 }
 .no-splash .splash { display: none; }
+
+/* ---------- Fundo do app (Ajustes → Fundo) ---------- */
+:root[data-bg="gradient"] body, :root:not([data-bg]) body {
+  background:
+    radial-gradient(120% 60% at 0% 0%, var(--page-2) 0%, transparent 60%),
+    radial-gradient(100% 60% at 100% 100%, color-mix(in srgb, var(--warm) 30%, transparent) 0%, transparent 70%),
+    var(--ui-page);
+  background-attachment: fixed;
+}
+:root[data-bg="dots"] body {
+  background:
+    radial-gradient(color-mix(in srgb, var(--ui-accent) 20%, transparent) 1.3px, transparent 1.6px) 0 0 / 20px 20px,
+    var(--ui-page);
+  background-attachment: fixed;
+}
+:root[data-bg="flowers"] body {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg fill='%23ffffff' fill-opacity='.75'%3E%3Cg transform='translate(30 34)'%3E%3Cellipse rx='3.4' ry='7' cy='-7'/%3E%3Cellipse rx='3.4' ry='7' cy='-7' transform='rotate(45)'/%3E%3Cellipse rx='3.4' ry='7' cy='-7' transform='rotate(90)'/%3E%3Cellipse rx='3.4' ry='7' cy='-7' transform='rotate(135)'/%3E%3Cellipse rx='3.4' ry='7' cy='-7' transform='rotate(180)'/%3E%3Cellipse rx='3.4' ry='7' cy='-7' transform='rotate(225)'/%3E%3Cellipse rx='3.4' ry='7' cy='-7' transform='rotate(270)'/%3E%3Cellipse rx='3.4' ry='7' cy='-7' transform='rotate(315)'/%3E%3C/g%3E%3Cg transform='translate(102 100) scale(.7)'%3E%3Cellipse rx='3.4' ry='7' cy='-7'/%3E%3Cellipse rx='3.4' ry='7' cy='-7' transform='rotate(45)'/%3E%3Cellipse rx='3.4' ry='7' cy='-7' transform='rotate(90)'/%3E%3Cellipse rx='3.4' ry='7' cy='-7' transform='rotate(135)'/%3E%3Cellipse rx='3.4' ry='7' cy='-7' transform='rotate(180)'/%3E%3Cellipse rx='3.4' ry='7' cy='-7' transform='rotate(225)'/%3E%3Cellipse rx='3.4' ry='7' cy='-7' transform='rotate(270)'/%3E%3Cellipse rx='3.4' ry='7' cy='-7' transform='rotate(315)'/%3E%3C/g%3E%3C/g%3E%3Cg fill='%23F6D77E' fill-opacity='.7'%3E%3Ccircle cx='30' cy='34' r='3.6'/%3E%3Ccircle cx='102' cy='100' r='2.6'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 140px 140px,
+    var(--ui-page);
+  background-attachment: fixed;
+}
+:root.dark[data-bg="flowers"] body { background-blend-mode: soft-light, normal; }

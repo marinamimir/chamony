@@ -5,7 +5,7 @@ import { esc, uid } from '../core/dom.js';
 import { m, attachMoneyMask } from '../core/money.js';
 import { ACCENT_COLORS, BANK_ICONS, CAT_COLORS } from '../store.js';
 import * as F from '../core/finance.js';
-import { toggle, sectionHead, chip } from '../ui/parts.js';
+import { toggle, sectionHead, chip, colorPicks, bindFreeColor } from '../ui/parts.js';
 import { openSheet, confirmSheet } from '../ui/sheet.js';
 import { toast } from '../ui/toast.js';
 
@@ -16,7 +16,7 @@ export function openBankForm(bankId = null) {
   const b = d.banks.find((x) => x.id === bankId);
   const st = { color: b?.color || COLORS[d.banks.length % COLORS.length], icon: b?.icon || 'fa-building-columns', usable: b ? b.usable : true };
   const picks = () => `
-    <span class="label">Cor</span><div class="pills wrap mb-3">${COLORS.map((x) => `<button type="button" class="color-pick" data-color="${x}" style="--c:${x}" aria-pressed="${st.color === x}" aria-label="Cor ${x}"></button>`).join('')}</div>
+    <span class="label">Cor</span><div class="pills wrap mb-3">${colorPicks(COLORS, st.color)}</div>
     <span class="label">Ícone</span><div class="pills wrap mb-3">${BANK_ICONS.map((i) => `<button type="button" class="icon-pick" data-icon="${i}" aria-pressed="${st.icon === i}"><i class="fas ${i}"></i></button>`).join('')}</div>
     <div class="setting-row"><div><b>Dinheiro de uso livre</b><small>Soma no saldo do mês. Desligado = reserva guardada.</small></div>
       <button type="button" class="toggle" role="switch" data-usable aria-checked="${st.usable}" aria-label="Uso livre"></button></div>`;
@@ -27,6 +27,7 @@ export function openBankForm(bankId = null) {
     foot: `<div class="btn-row">${b ? '<button type="button" class="btn danger" data-del style="flex:0 0 auto" aria-label="Excluir"><i class="fas fa-trash"></i></button>' : ''}<button type="button" class="btn primary" data-save>Salvar</button></div>`,
     onMount(el, api) {
       const bal = attachMoneyMask(el.querySelector('#bk-bal'), Math.max(0, b?.balance || 0));
+      bindFreeColor(el, (x) => { st.color = x; el.querySelector('#bk-picks').innerHTML = picks(); });
       el.addEventListener('click', async (e) => {
         const col = e.target.closest('[data-color]'); if (col) { st.color = col.dataset.color; el.querySelector('#bk-picks').innerHTML = picks(); }
         const ic = e.target.closest('[data-icon]'); if (ic) { st.icon = ic.dataset.icon; el.querySelector('#bk-picks').innerHTML = picks(); }

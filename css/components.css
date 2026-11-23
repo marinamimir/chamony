@@ -102,7 +102,7 @@
 .icon-btn {
   width: 44px; height: 44px; flex-shrink: 0;
   display: grid; place-items: center;
-  border-radius: 15px; border: 0; background: transparent; color: var(--ui-muted);
+  border-radius: 15px; border: 0; background: transparent; color: var(--ui-icon);
   transition: background var(--t-fast), transform var(--t-fast);
 }
 .icon-btn:hover { background: var(--ui-soft-surface); }
@@ -404,3 +404,30 @@
 a.btn, a.link-btn, a.menu-tile, a.list-row { text-decoration: none; }
 .hero > :not(.hero__petal) { position: relative; z-index: 1; }
 .hero__petal circle { fill: #fff; }
+
+/* ---------- Paletas e fundos ---------- */
+.pal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+.pal-tile { border: 0; background: none; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.pal-tile__prev {
+  position: relative; width: 100%; aspect-ratio: 1.15; border-radius: 20px; display: grid; place-items: center;
+  border: 2px solid var(--ui-border); transition: transform var(--t-fast), border-color var(--t-fast);
+}
+.pal-tile[aria-pressed="true"] .pal-tile__prev { border-color: var(--ui-strong); transform: scale(1.03); }
+.pal-tile__card { width: 62%; height: 46%; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-direction: column; justify-content: center; gap: 5px; padding: 0 9px; }
+.pal-tile__card i { display: block; height: 6px; border-radius: 6px; }
+.pal-tile__card i:last-child { width: 60%; }
+.pal-tile__dot { position: absolute; right: 8px; bottom: 8px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: .6rem; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+.pal-tile__name { font-size: var(--ui-type-xs); font-weight: 800; color: var(--ui-text); }
+.pal-tile__sub { font-size: var(--ui-type-2xs); font-weight: 700; color: var(--ui-subtle); margin-top: -4px; }
+.pal-bgs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.pal-bg { border: 2px solid var(--ui-border); border-radius: 16px; background: var(--ui-surface); padding: 6px 6px 8px; font-size: var(--ui-type-caption); font-weight: 800; color: var(--ui-text); display: flex; flex-direction: column; gap: 6px; }
+.pal-bg[aria-pressed="true"] { border-color: var(--ui-strong); }
+.pal-bg span { height: 40px; border-radius: 11px; background: var(--ui-page); }
+.pal-bg[data-bgprev="gradient"] span { background: radial-gradient(120% 90% at 0% 0%, var(--page-2), transparent 60%), radial-gradient(100% 80% at 100% 100%, color-mix(in srgb, var(--warm) 55%, transparent), transparent 70%), var(--ui-page); }
+.pal-bg[data-bgprev="dots"] span { background: radial-gradient(color-mix(in srgb, var(--ui-accent) 30%, transparent) 1.3px, transparent 1.6px) 0 0 / 9px 9px, var(--ui-page); }
+.pal-bg[data-bgprev="flowers"] span { background: radial-gradient(circle, #F6D77E 2px, transparent 2.5px) 0 0 / 18px 18px, radial-gradient(circle, rgba(255,255,255,.9) 5px, transparent 5.5px) 0 0 / 18px 18px, var(--ui-page); }
+.pe-swatch { position: relative; width: 48px; height: 48px; border-radius: 16px; background: var(--c); box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); flex-shrink: 0; overflow: hidden; }
+.pe-swatch input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; border: 0; padding: 0; }
+.color-pick.free { position: relative; overflow: hidden; background: conic-gradient(#F4A7B9, #F5CF7A, #8FD3B6, #8EC5F0, #B9A6EE, #F4A7B9); display: grid; place-items: center; color: #2B3040; font-size: .7rem; }
+.color-pick.free input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+.color-pick.free[aria-pressed="true"] { background: var(--c); }

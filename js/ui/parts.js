@@ -47,3 +47,16 @@ export const seg = (name, options, value) =>
     `<button type="button" data-act="seg" data-name="${esc(name)}" data-value="${esc(v)}" aria-pressed="${v === value}">${esc(label)}</button>`).join('')}</div>`;
 
 export const sectionHead = (title, right = '') => `<div class="section-head"><h2>${esc(title)}</h2>${right}</div>`;
+
+/** Amostras de cor + "Outra cor" (seletor livre). Use com bindFreeColor(). */
+export function colorPicks(colors, selected) {
+  const free = !colors.includes(selected);
+  return colors.map((x) => `<button type="button" class="color-pick" data-color="${x}" style="--c:${x}" aria-pressed="${x === selected}" aria-label="Cor ${x}"></button>`).join('')
+    + `<label class="color-pick free" style="--c:${safeColor(selected)}" aria-pressed="${free}" title="Outra cor">
+        <i class="fas fa-eye-dropper"></i><input type="color" data-free value="${safeColor(selected, '#C7D0E0')}" aria-label="Escolher outra cor"></label>`;
+}
+
+/** Liga o seletor livre: chama onPick(cor) quando a pessoa escolhe uma cor qualquer. */
+export function bindFreeColor(el, onPick) {
+  el.addEventListener('change', (e) => { if (e.target.matches?.('[data-free]')) onPick(e.target.value); });
+}

@@ -5,7 +5,7 @@ import { esc, uid, safeColor } from '../core/dom.js';
 import { m } from '../core/money.js';
 import { CAT_COLORS, CAT_ICONS } from '../store.js';
 import * as F from '../core/finance.js';
-import { chip } from '../ui/parts.js';
+import { chip, colorPicks, bindFreeColor } from '../ui/parts.js';
 import { openSheet, confirmSheet } from '../ui/sheet.js';
 import { toast } from '../ui/toast.js';
 
@@ -16,7 +16,7 @@ export function openCategoryForm(catId = null) {
   const picks = () => `
     <div class="row mb-3">${chip(st.color, st.icon, 'lg')}<span class="small muted">Prévia</span></div>
     <span class="label">Cor</span>
-    <div class="pills wrap mb-3">${CAT_COLORS.map((x) => `<button type="button" class="color-pick" data-color="${x}" style="--c:${x}" aria-pressed="${st.color === x}" aria-label="Cor ${x}"></button>`).join('')}</div>
+    <div class="pills wrap mb-3">${colorPicks(CAT_COLORS, st.color)}</div>
     <span class="label">Ícone</span>
     <div class="pills wrap">${CAT_ICONS.map((i) => `<button type="button" class="icon-pick" data-icon="${i}" aria-pressed="${st.icon === i}" aria-label="${i.replace('fa-', '')}"><i class="fas ${i}"></i></button>`).join('')}</div>`;
   openSheet({
@@ -25,6 +25,7 @@ export function openCategoryForm(catId = null) {
     foot: `<div class="btn-row">${c ? '<button type="button" class="btn danger" data-del style="flex:0 0 auto" aria-label="Excluir categoria"><i class="fas fa-trash"></i></button>' : ''}
       <button type="button" class="btn primary" data-save>${c ? 'Salvar' : 'Criar categoria'}</button></div>`,
     onMount(el, api) {
+      bindFreeColor(el, (c) => { st.color = c; el.querySelector('#cat-picks').innerHTML = picks(); });
       el.addEventListener('click', async (e) => {
         const col = e.target.closest('[data-color]');
         if (col) { st.color = col.dataset.color; el.querySelector('#cat-picks').innerHTML = picks(); }

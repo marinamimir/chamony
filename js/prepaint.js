@@ -1,14 +1,17 @@
 // Aplica o tema salvo antes do primeiro desenho (evita piscar). Script clássico e síncrono.
 (function () {
   try {
-    var t = JSON.parse(localStorage.getItem('chamony.theme') || 'null') || {};
+    var t = JSON.parse(localStorage.getItem('chamony.theme') || 'null');
+    if (!t || !t.light) return;
     var r = document.documentElement;
-    if (t.palette === 'B') r.dataset.palette = 'B';
-    if (t.dark === 'dark' || (t.dark !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)) r.classList.add('dark');
-    if (t.accent && /^#[0-9a-f]{6}$/i.test(t.accent)) {
-      r.style.setProperty('--accent-base', t.accent);
-      if (!r.classList.contains('dark')) r.style.setProperty('--theme-accent', t.accent);
-    }
+    var dark = t.mode === 'dark' || (t.mode !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+    if (dark) r.classList.add('dark');
+    var vars = dark ? t.dark : t.light;
+    for (var k in vars) if (/^--[a-z0-9-]+$/.test(k)) r.style.setProperty(k, String(vars[k]));
+    if (t.bg) r.dataset.bg = t.bg;
+    if (t.icons === 'own') r.classList.add('icons-own');
     if (t.splash === false) r.classList.add('no-splash');
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta && t.meta) meta.content = t.meta[dark ? 1 : 0];
   } catch (e) { /* sem armazenamento: usa o padrão */ }
 })();

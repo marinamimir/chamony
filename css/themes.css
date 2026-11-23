@@ -1,10 +1,10 @@
 /* ChaMony — motor de temas. Mesmas variáveis do AeroSync:
    --theme-accent, --theme-accent-2, --theme-soft, --theme-glow, --on-accent, --surface, --page
-   e os tokens semânticos --ui-*. js/ui/theme.js troca a paleta (data-palette) e o modo escuro (.dark). */
+   e os tokens semânticos --ui-*. Os valores abaixo são o padrão (paleta Camomila);
+   js/ui/theme.js aplica a paleta escolhida (pronta ou própria) como variáveis inline, no claro e no escuro. */
 
 /* Paleta A (padrão, herdada do AeroSync): azul-acinzentado + rosa suave */
-:root,
-:root[data-palette="A"] {
+:root {
   --theme-accent: #7484A0;
   --theme-accent-2: #C7D0E0;
   --theme-soft: #EEF1F8;
@@ -14,19 +14,6 @@
   --page: #FBEFF2;
   --page-2: #F3EEF8;
   --warm: #F6C9D3;
-}
-
-/* Paleta B: amarelo-manteiga, verde-sálvia e creme */
-:root[data-palette="B"] {
-  --theme-accent: #7A9672;
-  --theme-accent-2: #F3DC8C;
-  --theme-soft: #F1F4E8;
-  --theme-glow: rgba(122, 150, 114, .30);
-  --on-accent: #FFFFFF;
-  --surface: #FFFEF9;
-  --page: #FBF5E6;
-  --page-2: #F1F2E3;
-  --warm: #F6E3A1;
 }
 
 :root {
@@ -40,6 +27,7 @@
   --ui-muted: #6B7183;
   --ui-subtle: #9EA3B3;
   --ui-border: rgba(58, 63, 78, .09);
+  --ui-icon: var(--ui-muted);
   --ui-success: #5FAE88;
   --ui-success-soft: #DDF2E6;
   --ui-warning: #D9A04A;
@@ -58,7 +46,7 @@
 
 /* Modo escuro (mesmo espírito do AeroSync: fundo #14161f, superfícies #1e2130) */
 :root.dark {
-  --theme-accent: color-mix(in srgb, var(--accent-base, #7484A0) 70%, white);
+  --theme-accent: #A9B4C8;
   --surface: #1E2130;
   --page: #14161F;
   --page-2: #181B27;
@@ -83,5 +71,3 @@
   --chip-ink-mix: 78%;
   color-scheme: dark;
 }
-:root.dark[data-palette="B"] { --accent-base: #7A9672; }
-:root.dark[data-palette="A"] { --accent-base: #7484A0; }

@@ -11,11 +11,7 @@ import * as backup from '../data/backup.js';
 import * as aero from '../data/aerosync.js';
 import { mergeData, replaceData } from '../data/merge.js';
 import { APP_VERSION } from '../version.js';
-
-const PALETTES = [
-  ['A', 'Paleta A', 'Azul-acinzentado e rosa (AeroSync)', ['#7484A0', '#FBEFF2', '#C7D0E0', '#F9C5D1']],
-  ['B', 'Paleta B', 'Manteiga, sálvia e creme', ['#7A9672', '#FBF5E6', '#F3DC8C', '#CDEBC5']],
-];
+import { appearanceSection, appearanceActions } from './appearance.js';
 
 const countGroups = (list) => new Set((list || []).map((e) => e.groupId || e.id)).size;
 
@@ -115,16 +111,9 @@ export default {
     return `
       ${sectionHead('Aparência')}
       <section class="card">
-        <span class="label">Paleta</span>
-        <div class="stack mb-3">${PALETTES.map(([id, name, desc, sw]) => `
-          <button type="button" class="pill block-pill" data-act="palette" data-value="${id}" aria-pressed="${s.palette === id}" style="width:100%;justify-content:flex-start;min-height:58px;border-radius:18px">
-            <span class="swatch-pal">${sw.map((c) => `<i style="--c:${c}"></i>`).join('')}</span>
-            <span style="text-align:left"><b>${name}</b><br><small class="muted">${desc}</small></span></button>`).join('')}</div>
+        ${appearanceSection(d)}
         <span class="label">Modo</span>
         <div class="mb-3">${seg('dark', [['system', 'Automático'], ['light', 'Claro'], ['dark', 'Escuro']], s.dark)}</div>
-        <div class="setting-row"><div><b>Cor de destaque</b><small>${s.customAccent ? 'Personalizada' : 'A da paleta'}</small></div>
-          <input type="color" id="accent-pick" value="${esc(s.customAccent || (s.palette === 'B' ? '#7A9672' : '#7484A0'))}" aria-label="Escolher cor de destaque" style="width:48px;height:40px;border:0;background:none;padding:0">
-          ${s.customAccent ? '<button type="button" class="link-btn" data-act="accent-reset">Voltar</button>' : ''}</div>
         <div class="setting-row"><div><b>Animação de abertura</b><small>A flor desabrochando ao abrir</small></div>${toggle(s.splash, 'toggle-setting', 'Animação de abertura', 'data-key="splash"')}</div>
       </section>
 
@@ -180,14 +169,11 @@ export default {
   },
   mount(root, { query }) {
     root.querySelector('#import-input')?.addEventListener('change', (e) => { handleFile(e.target.files[0]); e.target.value = ''; });
-    let t;
-    root.querySelector('#accent-pick')?.addEventListener('input', (e) => { clearTimeout(t); const v = e.target.value; t = setTimeout(() => setSetting('customAccent', v), 120); });
     if (query?.has('importar')) setTimeout(() => root.querySelector('#aerosync')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200);
   },
   actions: {
-    palette: (el) => store.commit((s) => { s.settings.palette = el.dataset.value; s.settings.customAccent = null; }),
+    ...appearanceActions,
     seg: (el) => setSetting(el.dataset.name, el.dataset.value),
-    'accent-reset': () => setSetting('customAccent', null),
     'toggle-setting': (el) => setSetting(el.dataset.key, !store.get().settings[el.dataset.key]),
     limit: () => openLimitSheet(),
     'warn-days': (el) => setSetting('dueWarnDays', Math.min(15, Math.max(1, store.get().settings.dueWarnDays + Number(el.dataset.delta)))),
