@@ -192,14 +192,22 @@ export function openExpenseForm({ groupId = null, preset = {} } = {}) {
             await putReceipt({ id: receiptId, blob: state.newPhoto, createdAt: new Date().toISOString() });
           } else if (state.removePhoto && state.receiptId) await deleteReceipt(state.receiptId).catch(() => {});
         } catch { toast('Não consegui guardar a foto; a compra foi salva sem ela.'); receiptId = null; }
+        const keepBill = first && rows.some((r) => r.billYM) && first.cardId === state.cardId && first.purchaseDate === date && first.instTotal === n
+          ? Object.fromEntries(rows.map((r) => [r.instIndex, r.billYM])) : null;
         store.commit((s) => {
           const cat = s.categories.find((c) => c.id === state.catId);
           if (groupId) s.expenses = s.expenses.filter((x) => (x.groupId || x.id) !== groupId);
-          splitInstallments(amount, n).forEach((part, i) => {
+          // Compra importada no meio do parcelamento (ex.: começou na parcela 2/12): mantém as mesmas parcelas.
+          const start = first && first.instTotal === n && first.instIndex > 1 ? first.instIndex : 1;
+          splitInstallments(amount, n - start + 1).forEach((part, j) => {
+            const i = start - 1 + j;
             s.expenses.push({
               id: `${gid}_${i + 1}`, groupId: gid, desc, amount: part, purchaseDate: date, time,
               cardId: state.cardId, catId: state.catId, catSnap: catSnapshot(cat),
               instIndex: i + 1, instTotal: n, recurring, note, tags, ...(receiptId ? { receiptId } : {}),
+              // Compra importada: mantém a marca de importação e, se nada mudou na data/cartão/parcelas, o mês impresso na fatura.
+              ...(first?.imp ? { imp: first.imp } : {}),
+              ...(keepBill && keepBill[i + 1] ? { billYM: keepBill[i + 1] } : {}),
               createdAt: first?.createdAt || new Date().toISOString(), ...(first?.source ? { source: first.source } : {}),
             });
           });

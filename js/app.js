@@ -27,9 +27,10 @@ import ajustes from './features/settings.js';
 import relatorio from './features/report.js';
 import conquistas, { checkUnlocks } from './features/achievements.js';
 import { openQuickAdd } from './features/keypad.js';
+import importar from './features/import.js';
 import { feedback } from './ui/feedback.js';
 
-const VIEWS = { inicio, compras, cartoes, metas, mais, resumo, comparativo, renda, contas, categorias, recorrentes, simulador, lixeira, ajustes, relatorio, conquistas };
+const VIEWS = { inicio, compras, cartoes, metas, mais, resumo, comparativo, renda, contas, categorias, recorrentes, simulador, lixeira, ajustes, relatorio, conquistas, importar };
 const MONTH_VIEWS = new Set(['compras', 'cartoes', 'resumo', 'comparativo', 'renda', 'recorrentes', 'simulador', 'categorias', 'relatorio']);
 
 const $view = document.getElementById('view');

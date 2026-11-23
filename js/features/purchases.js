@@ -159,7 +159,8 @@ export default {
       <div class="row mb-2" style="justify-content:space-between">
         <div><div class="label" style="margin:0">${plural(list.length, 'lançamento', 'lançamentos')}</div><div class="strong num" style="font-size:1.3rem">${m(total)}</div></div>
         <div class="row" style="gap:6px">
-          <button type="button" class="btn sm ghost" data-act="paste-import" title="Colar linhas de extrato"><i class="fas fa-paste"></i><span class="only-desktop">Colar extrato</span></button>
+          <a class="btn sm ghost" href="#/importar" title="Importar extrato do banco"><i class="fas fa-file-import"></i><span class="only-desktop">Importar extrato</span></a>
+          <button type="button" class="btn sm ghost" data-act="paste-import" title="Colar linhas de extrato"><i class="fas fa-paste"></i><span class="only-desktop">Colar</span></button>
           ${list.length ? `<button type="button" class="btn sm ${bulk ? 'primary' : 'ghost'}" data-act="bulk-mode"><i class="fas ${bulk ? 'fa-xmark' : 'fa-check-double'}"></i>${bulk ? 'Cancelar' : 'Selecionar'}</button>` : ''}
         </div>
       </div>

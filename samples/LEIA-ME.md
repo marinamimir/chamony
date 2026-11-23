@@ -1,20 +1,17 @@
-# Exemplos de extrato (fase 2)
+# Exemplos de extrato
 
-Coloque aqui exemplos **reais** de extratos, com dados pessoais apagados ou trocados.
-Os leitores de extrato só serão escritos a partir deles (não adivinhamos formatos).
+Os leitores de extrato só são escritos a partir de exemplos reais (não adivinhamos formatos).
+**Os arquivos reais NÃO ficam aqui**: o repositório pode ser público. Eles são usados uma vez, fora do
+repositório, para entender o formato; aqui ficam só **extratos falsos no mesmo formato**, gerados por
+`tools/make-sample-pdfs.mjs`, e testados por `tools/test-import.mjs`.
 
-```
-samples/
-  itau/
-    conta.csv        conta.pdf
-    cartao.csv       cartao.pdf
-  nubank/
-    conta.csv        conta.pdf
-    cartao.csv       cartao.pdf
-```
+| Banco | Tipo | Formato | Situação | Exemplo falso |
+|---|---|---|---|---|
+| Itaú | Conta corrente | PDF | pronto | `itau/conta.exemplo.pdf` |
+| Itaú | Fatura do cartão | PDF | pronto | `itau/cartao.exemplo.pdf` |
+| Itaú | Conta / cartão | CSV | aguardando exemplo | |
+| Nubank | Conta / cartão | CSV / PDF | aguardando exemplo | |
 
-Como anonimizar sem estragar o formato:
-- Troque nomes, CPF, número de conta/cartão e endereço por textos falsos **do mesmo tamanho**.
-- Mantenha cabeçalhos, separadores, datas, sinais (+/−), "Parcela 2/10", estornos e pagamentos.
-- Se o PDF tiver senha, avise qual é o padrão (ex.: "5 primeiros dígitos do CPF"), não a senha.
-- Ideal: pelo menos um mês com compra parcelada, estorno e pagamento de fatura.
+Ao mandar um exemplo real: troque nome, CPF, endereço e números de conta/cartão por texto falso do
+mesmo tamanho; mantenha cabeçalhos, datas, "Parcela 2/10", estornos e pagamentos. PDF com senha:
+diga só o padrão da senha, nunca a senha.

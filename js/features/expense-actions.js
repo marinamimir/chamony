@@ -54,9 +54,9 @@ export function bulkEdit(gids, { cardId = '', catId = '', date = '' }) {
     const cat = s.categories.find((c) => c.id === catId);
     for (const e of s.expenses) {
       if (!set.has(gidOf(e))) continue;
-      if (cardId) e.cardId = cardId;
+      if (cardId && cardId !== e.cardId) { e.cardId = cardId; delete e.billYM; }
       if (cat) { e.catId = cat.id; e.catSnap = catSnapshot(cat); }
-      if (isISO(date)) e.purchaseDate = date;
+      if (isISO(date) && date !== e.purchaseDate) { e.purchaseDate = date; delete e.billYM; }
     }
   });
 }

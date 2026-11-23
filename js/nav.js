@@ -9,6 +9,7 @@ export const TAB_ITEMS = [
 ];
 
 export const MORE_ITEMS = [
+  { id: 'importar', title: 'Importar extrato', desc: 'PDF do banco', icon: 'fa-file-import', color: '#FFD9B8' },
   { id: 'resumo', title: 'Resumo do mês', desc: 'Visão geral e rosca', icon: 'fa-chart-pie', color: '#BCD7F5' },
   { id: 'comparativo', title: 'Comparativo', desc: 'Últimos 5 meses', icon: 'fa-chart-line', color: '#D6D0F5' },
   { id: 'relatorio', title: 'Relatório (PDF)', desc: 'Resumo para salvar', icon: 'fa-file-pdf', color: '#FFD9B8' },

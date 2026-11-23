@@ -512,3 +512,18 @@ details.more[open] summary i { transform: rotate(180deg); }
 .fav-pill i { color: #E2B13C !important; }
 .garden-card .garden { max-height: 300px; margin: 0 auto; }
 .dark .garden { filter: brightness(.82) saturate(.85); }
+
+/* ---------- Importação de extrato ---------- */
+.imp-row { padding-left: 10px; }
+.imp-row .select-dot { border: 2px solid var(--ui-subtle); background: none; padding: 0; }
+.imp-row.is-off .list-row__title { opacity: .6; }
+.imp-cat { border: 0; background: none; padding: 0; border-radius: 15px; }
+.imp-cat:active { transform: scale(.94); }
+.list-row.imp-row.is-off { opacity: 1; }
+.imp-bar { z-index: 36; }
+.list-row.imp-row.is-selected { background: var(--ui-surface); }
+.imp-row.is-selected .select-dot { background: var(--ui-accent); border-color: var(--ui-accent); color: var(--on-accent); }
+.imp-row.is-off { background: color-mix(in srgb, var(--ui-soft-surface) 60%, var(--ui-surface)); }
+.imp-row.is-off .list-row__value { opacity: .5; }
+.imp-row .list-row__meta { white-space: normal; }
+.imp-spacer { height: 84px; }

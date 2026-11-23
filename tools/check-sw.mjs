@@ -12,7 +12,7 @@ const walk = (dir) => readdirSync(path.join(root, dir)).flatMap((f) => {
   return statSync(path.join(root, rel)).isDirectory() ? walk(rel) : [rel];
 });
 const files = [...walk('js'), ...walk('css'), 'index.html', 'manifest.webmanifest'];
-const missing = files.filter((f) => f.match(/\.(js|css|html|webmanifest)$/) && !f.startsWith('js/import/') && !listed.has(f));
+const missing = files.filter((f) => f.match(/\.(js|css|html|webmanifest)$/) && !listed.has(f));
 const ghost = [...listed].filter((f) => f && !(() => { try { return statSync(path.join(root, f)).isFile(); } catch { return false; } })());
 if (missing.length) console.log('Faltando no APP_SHELL:\n  ' + missing.join('\n  '));
 if (ghost.length) console.log('Listados mas inexistentes:\n  ' + ghost.join('\n  '));

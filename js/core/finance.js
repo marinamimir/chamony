@@ -19,6 +19,7 @@ export function firstBillingYM(d, purchaseDate, cardId) {
 
 /** Mês efetivo de uma linha (parcela N cai N-1 meses depois da primeira). */
 export function billingYM(d, e) {
+  if (e.billYM) return e.billYM; // importado: vale o mês impresso na fatura do banco
   return shiftYM(firstBillingYM(d, e.purchaseDate, e.cardId), (e.instIndex || 1) - 1);
 }
 

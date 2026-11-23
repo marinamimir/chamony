@@ -169,6 +169,7 @@ export default {
           <button type="button" class="btn primary" data-act="export"><i class="fas fa-download"></i>Exportar backup</button>
           ${backup.canShareFiles() ? '<button type="button" class="btn ghost" data-act="share" aria-label="Compartilhar backup"><i class="fas fa-share-nodes"></i>Enviar</button>' : ''}
         </div>
+        <a class="btn primary block mb-2" href="#/importar"><i class="fas fa-file-arrow-up"></i>Importar extrato do banco (PDF)</a>
         <button type="button" class="btn ghost block" data-act="import-file"><i class="fas fa-file-import"></i>Importar arquivo (ChaMony ou AeroSync)</button>
         <input type="file" id="import-input" accept="application/json,.json" hidden>
         <p class="tiny subtle mt-2">“Enviar” abre o menu do Android: dá para salvar direto no Google Drive.</p>

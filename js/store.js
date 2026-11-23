@@ -98,6 +98,8 @@ export function normalizeExpense(e) {
     note: str(e.note, 1000),
     tags: arr(e.tags).filter((t) => typeof t === 'string' && t.trim()).map((t) => t.trim().slice(0, 30)).slice(0, 12),
     ...(e.receiptId ? { receiptId: str(e.receiptId, 80) } : {}),
+    ...(isYM(e.billYM) ? { billYM: e.billYM } : {}),          // mês da fatura impresso no extrato (importação)
+    ...(e.imp ? { imp: str(e.imp, 200) } : {}),                // chave de importação (detecta duplicados)
     createdAt: str(e.createdAt, 40) || new Date().toISOString(),
     ...(e.deletedAt ? { deletedAt: str(e.deletedAt, 40) } : {}),
     ...(e.source ? { source: str(e.source, 40) } : {}),
@@ -139,6 +141,7 @@ export function normalize(raw) {
     },
     incomes: arr(raw.incomes).filter((i) => i && isISO(i.date) && Number.isFinite(i.amount)).map((i) => ({
       id: str(i.id, 80) || uid('i'), desc: str(i.desc, 120, 'Entrada'), amount: int(i.amount), date: i.date, usable: i.usable !== false,
+      ...(i.imp ? { imp: str(i.imp, 200) } : {}),
     })),
     banks: arr(raw.banks).filter((b) => b && typeof b.name === 'string').map((b) => ({
       id: str(b.id, 80) || uid('b'), name: str(b.name, 60), balance: int(b.balance), color: col(b.color, '#BCD7F5'), icon: ico(b.icon, 'fa-building-columns'), usable: !!b.usable,
@@ -146,6 +149,7 @@ export function normalize(raw) {
     cards: arr(raw.cards).filter((c) => c && typeof c.name === 'string').map((c) => ({
       id: str(c.id, 80) || uid('card'), name: str(c.name, 60), closingDay: clampInt(c.closingDay, 1, 31, 20), dueDay: clampInt(c.dueDay, 1, 31, 5),
       color: col(c.color, '#B9A6EE'), active: c.active !== false, limit: Math.max(0, int(c.limit)),
+      ...(/^\d{4}$/.test(c.last4 || '') ? { last4: c.last4 } : {}),
     })),
     categories: arr(raw.categories).filter((c) => c && typeof c.name === 'string' && c.id).map((c) => ({
       id: str(c.id, 80), name: str(c.name, 40), color: col(c.color, '#D9D9E3'), icon: ico(c.icon, 'fa-tag'),

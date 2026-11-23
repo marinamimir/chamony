@@ -5,7 +5,7 @@
    - Nenhum dado financeiro passa por aqui: os dados ficam no localStorage do aparelho.
    Publicou mudança? Suba CACHE_VERSION (e APP_VERSION em js/version.js).
    `node tools/check-sw.mjs` confere se todo arquivo do app está na lista. */
-const CACHE_VERSION = 'v0.2.0';
+const CACHE_VERSION = 'v0.3.0';
 const CACHE = `chamony-${CACHE_VERSION}`;
 const APP_SHELL = [
   './',
@@ -46,6 +46,14 @@ const APP_SHELL = [
   './js/features/appearance.js',
   './js/features/achievements.js',
   './js/features/keypad.js',
+  './js/features/import.js',
+  './js/import/parser.js',
+  './js/import/pdf.js',
+  './js/import/pipeline.js',
+  './js/import/parsers/itau.js',
+  './js/import/parsers/nubank.js',
+  './vendor/pdfjs/pdf.min.mjs',
+  './vendor/pdfjs/pdf.worker.min.mjs',
   './js/features/banks.js',
   './js/features/budget.js',
   './js/features/cards.js',

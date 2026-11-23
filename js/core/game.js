@@ -10,7 +10,7 @@ const localDay = (iso) => { const d = new Date(iso); return Number.isNaN(d.getTi
 export function stats(d, today = todayISO()) {
   // Dias em que a pessoa registrou algo à mão (compras criadas no app).
   const days = new Set(d.expenses.concat(d.trash)
-    .filter((e) => !IMPORTED.test(e.source || '') && e.instIndex === 1)
+    .filter((e) => !e.imp && !IMPORTED.test(e.source || '') && e.instIndex === 1)
     .map((e) => localDay(e.createdAt)).filter(Boolean));
   let streak = 0;
   let cur = days.has(today) ? today : addDays(today, -1); // a sequência só quebra se ontem também ficou vazio
