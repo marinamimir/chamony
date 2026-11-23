@@ -1,0 +1,73 @@
+/* ChaMony — tokens de design (fontes, escala, raios, sombras, movimento). Cores ficam em themes.css. */
+
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 1000;
+  src: url('../vendor/fonts/nunito-latin-wght-normal.woff2') format('woff2-variations'), url('../vendor/fonts/nunito-latin-wght-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 1000;
+  src: url('../vendor/fonts/nunito-latin-ext-wght-normal.woff2') format('woff2-variations'), url('../vendor/fonts/nunito-latin-ext-wght-normal.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url('../vendor/fonts/manrope-latin-wght-normal.woff2') format('woff2-variations'), url('../vendor/fonts/manrope-latin-wght-normal.woff2') format('woff2');
+}
+
+:root {
+  --ui-font-body: 'Nunito', system-ui, sans-serif;
+  --ui-font-num: 'Manrope', 'Nunito', system-ui, sans-serif;
+
+  --ui-type-2xs: .625rem;
+  --ui-type-caption: .6875rem;
+  --ui-type-xs: .75rem;
+  --ui-type-sm: .875rem;
+  --ui-type-base: 1rem;
+  --ui-type-lg: 1.125rem;
+  --ui-type-xl: 1.25rem;
+  --ui-type-2xl: 1.5rem;
+  --ui-type-3xl: 2rem;
+  --ui-type-hero: 2.5rem;
+
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 24px;
+  --r-xl: 30px;
+  --r-pill: 999px;
+
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+
+  --tap: 48px; /* alvo mínimo de toque */
+
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --ease-spring: cubic-bezier(.34, 1.4, .5, 1);
+  --t-fast: 140ms;
+  --t-med: 260ms;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  --nav-h: 68px;
+  --sidebar-w: 256px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-fast: 0ms; --t-med: 0ms; }
+}

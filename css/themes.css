@@ -1,0 +1,87 @@
+/* ChaMony — motor de temas. Mesmas variáveis do AeroSync:
+   --theme-accent, --theme-accent-2, --theme-soft, --theme-glow, --on-accent, --surface, --page
+   e os tokens semânticos --ui-*. js/ui/theme.js troca a paleta (data-palette) e o modo escuro (.dark). */
+
+/* Paleta A (padrão, herdada do AeroSync): azul-acinzentado + rosa suave */
+:root,
+:root[data-palette="A"] {
+  --theme-accent: #7484A0;
+  --theme-accent-2: #C7D0E0;
+  --theme-soft: #EEF1F8;
+  --theme-glow: rgba(116, 132, 160, .30);
+  --on-accent: #FFFFFF;
+  --surface: #FFFDFD;
+  --page: #FBEFF2;
+  --page-2: #F3EEF8;
+  --warm: #F6C9D3;
+}
+
+/* Paleta B: amarelo-manteiga, verde-sálvia e creme */
+:root[data-palette="B"] {
+  --theme-accent: #7A9672;
+  --theme-accent-2: #F3DC8C;
+  --theme-soft: #F1F4E8;
+  --theme-glow: rgba(122, 150, 114, .30);
+  --on-accent: #FFFFFF;
+  --surface: #FFFEF9;
+  --page: #FBF5E6;
+  --page-2: #F1F2E3;
+  --warm: #F6E3A1;
+}
+
+:root {
+  --ui-accent: var(--theme-accent);
+  --ui-accent-2: var(--theme-accent-2);
+  --ui-surface: var(--surface);
+  --ui-page: var(--page);
+  --ui-soft-surface: var(--theme-soft);
+  --ui-text: #3A3F4E;
+  --ui-strong: #262A36;
+  --ui-muted: #6B7183;
+  --ui-subtle: #9EA3B3;
+  --ui-border: rgba(58, 63, 78, .09);
+  --ui-success: #5FAE88;
+  --ui-success-soft: #DDF2E6;
+  --ui-warning: #D9A04A;
+  --ui-warning-soft: #FBEBCB;
+  --ui-danger: #D9798C;
+  --ui-danger-soft: #FBE1E6;
+  --ui-overlay: rgba(40, 44, 58, .32);
+  --ui-shadow-1: 0 1px 2px rgba(60, 50, 70, .05), 0 4px 14px rgba(60, 50, 70, .06);
+  --ui-shadow-2: 0 2px 6px rgba(60, 50, 70, .06), 0 14px 34px rgba(60, 50, 70, .10);
+  --ui-shadow-accent: 0 10px 24px var(--theme-glow);
+  --chip-mix: 55%;
+  --chip-ink: #2B3040;
+  --chip-ink-mix: 42%;
+  color-scheme: light;
+}
+
+/* Modo escuro (mesmo espírito do AeroSync: fundo #14161f, superfícies #1e2130) */
+:root.dark {
+  --theme-accent: color-mix(in srgb, var(--accent-base, #7484A0) 70%, white);
+  --surface: #1E2130;
+  --page: #14161F;
+  --page-2: #181B27;
+  --theme-soft: #262A3B;
+  --ui-text: #E3E6EF;
+  --ui-strong: #F4F5FA;
+  --ui-muted: #B3B9CA;
+  --ui-subtle: #848BA0;
+  --ui-border: rgba(255, 255, 255, .07);
+  --ui-success: #86D3AA;
+  --ui-success-soft: rgba(134, 211, 170, .14);
+  --ui-warning: #F2C27A;
+  --ui-warning-soft: rgba(242, 194, 122, .14);
+  --ui-danger: #F0A3B2;
+  --ui-danger-soft: rgba(240, 163, 178, .14);
+  --ui-overlay: rgba(0, 0, 0, .55);
+  --ui-shadow-1: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 16px rgba(0, 0, 0, .22);
+  --ui-shadow-2: 0 4px 10px rgba(0, 0, 0, .3), 0 18px 40px rgba(0, 0, 0, .35);
+  --on-accent: #14161F;
+  --chip-mix: 26%;
+  --chip-ink: #FFFFFF;
+  --chip-ink-mix: 78%;
+  color-scheme: dark;
+}
+:root.dark[data-palette="B"] { --accent-base: #7A9672; }
+:root.dark[data-palette="A"] { --accent-base: #7484A0; }
