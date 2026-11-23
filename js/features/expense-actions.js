@@ -1,0 +1,52 @@
+// Ações sobre compras: lixeira (com "Desfazer"), restaurar, excluir de vez, edição em massa.
+
+import * as store from '../store.js';
+import { toast } from '../ui/toast.js';
+import { catSnapshot } from '../core/finance.js';
+import { isISO } from '../core/dates.js';
+
+const gidOf = (e) => e.groupId || e.id;
+
+/** Move grupos (compra + parcelas) para a lixeira. */
+export function trashGroups(gids) {
+  const set = new Set(gids);
+  let moved = [];
+  store.commit((s) => {
+    const now = new Date().toISOString();
+    moved = s.expenses.filter((e) => set.has(gidOf(e)));
+    s.expenses = s.expenses.filter((e) => !set.has(gidOf(e)));
+    s.trash.push(...moved.map((e) => ({ ...e, deletedAt: now })));
+  });
+  if (!moved.length) return;
+  toast(set.size > 1 ? `${set.size} compras foram para a lixeira` : 'Compra movida para a lixeira', {
+    action: { label: 'Desfazer', fn: () => restoreGroups([...set]) },
+  });
+}
+
+export function restoreGroups(gids) {
+  const set = new Set(gids);
+  store.commit((s) => {
+    const back = s.trash.filter((e) => set.has(gidOf(e))).map(({ deletedAt, ...e }) => e);
+    s.trash = s.trash.filter((e) => !set.has(gidOf(e)));
+    s.expenses.push(...back);
+  });
+}
+
+export function purgeGroups(gids) {
+  const set = new Set(gids);
+  store.commit((s) => { s.trash = s.trash.filter((e) => !set.has(gidOf(e))); });
+}
+
+/** Edição em massa: troca forma de pagamento, categoria e/ou data de todas as compras selecionadas. */
+export function bulkEdit(gids, { cardId = '', catId = '', date = '' }) {
+  const set = new Set(gids);
+  store.commit((s) => {
+    const cat = s.categories.find((c) => c.id === catId);
+    for (const e of s.expenses) {
+      if (!set.has(gidOf(e))) continue;
+      if (cardId) e.cardId = cardId;
+      if (cat) { e.catId = cat.id; e.catSnap = catSnapshot(cat); }
+      if (isISO(date)) e.purchaseDate = date;
+    }
+  });
+}
