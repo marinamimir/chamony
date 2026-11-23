@@ -8,6 +8,7 @@ export const ui = {
   hidden: false,
   bulk: { on: false, sel: new Set() },
   homeExpanded: false,
+  planTab: 'metas',
 };
 
 export function setHidden(v) {

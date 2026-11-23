@@ -58,7 +58,7 @@ function duesCard(d) {
     return `<section class="card soft row"><i class="fas fa-mug-hot" style="color:var(--ui-accent)"></i><p class="small muted grow">Nenhum vencimento nos próximos 20 dias. Aproveite o chá.</p></section>`;
   }
   return `<div class="list">${dues.slice(0, 4).map((x) => `
-    <a class="list-row tap" href="${x.kind === 'card' ? '#/cartoes' : '#/recorrentes'}" style="text-decoration:none">
+    <a class="list-row tap" href="${{ card: '#/cartoes', bill: '#/recorrentes', sub: '#/metas?aba=assinaturas', debt: '#/metas?aba=dividas' }[x.kind]}" style="text-decoration:none">
       ${chip(x.color, x.icon)}
       <div class="list-row__main"><div class="list-row__title">${esc(x.name)}</div>
         <div class="list-row__meta">${esc(shortDate(x.date))} · ${esc(inDays(x.days))}</div></div>

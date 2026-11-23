@@ -122,6 +122,31 @@ export function upcomingDues(d, { today = todayISO(), horizon = 31 } = {}) {
       break;
     }
   }
+  // Assinaturas ativas (anuais só no mês da cobrança)
+  for (const x of d.subscriptions || []) {
+    if (!x.active) continue;
+    for (const k of [ym, shiftYM(ym, 1)]) {
+      if (x.cycle === 'yearly' && Number(k.slice(5, 7)) !== x.month) continue;
+      const date = dateInMonth(k, x.day);
+      const days = daysBetween(today, date);
+      if (days < 0 || days > horizon) continue;
+      out.push({ kind: 'sub', id: x.id, name: x.name, amount: x.amount, date, days, color: x.color, icon: 'fa-rotate', warn: days <= 2 });
+      break;
+    }
+  }
+  // Dívidas em aberto com dia de vencimento
+  for (const x of d.debts || []) {
+    if (x.kind !== 'owe' || x.closedAt || !x.dueDay) continue;
+    const left = x.total - x.payments.reduce((s, p) => s + p.amount, 0);
+    if (left <= 0) continue;
+    for (const k of [ym, shiftYM(ym, 1)]) {
+      const date = dateInMonth(k, x.dueDay);
+      const days = daysBetween(today, date);
+      if (days < 0 || days > horizon) continue;
+      out.push({ kind: 'debt', id: x.id, name: x.person || x.desc, amount: Math.min(left, Math.ceil(x.total / x.installments)), date, days, color: '#F9C5D1', icon: 'fa-handshake', warn: days <= d.settings.dueWarnDays });
+      break;
+    }
+  }
   return out.sort((a, b) => a.date.localeCompare(b.date));
 }
 

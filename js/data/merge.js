@@ -66,6 +66,17 @@ export function mergeData(cur, inc) {
   next.incomes.push(...newIncomes);
   next.bills.push(...newBills);
   next.simItems.push(...newSims);
+  // Coleções das fases 3 e 4 (metas, desejos, assinaturas, dívidas, investimentos, favoritos)
+  const extra = {};
+  for (const k of ['goals', 'wishes', 'subscriptions', 'debts', 'investments', 'favorites']) {
+    const add = mergeById(next[k] || [], inc[k]);
+    next[k] = [...(next[k] || []), ...add];
+    extra[k] = add.length;
+  }
+  for (const [k, v] of Object.entries(inc.budget?.catLimits || {})) {
+    const id = cats.map[k] ?? k;
+    if (!next.budget.catLimits?.[id]) next.budget.catLimits = { ...next.budget.catLimits, [id]: v };
+  }
 
   if (inc.salary) {
     if (!next.salary.base) { next.salary.base = inc.salary.base; next.salary.usable = inc.salary.usable; }
@@ -77,7 +88,7 @@ export function mergeData(cur, inc) {
     data: normalize(next),
     stats: {
       expenses: newExpenses.length, trash: newTrash.length, categories: cats.added.length, cards: cards.added.length,
-      banks: banks.added.length, incomes: newIncomes.length, bills: newBills.length, simItems: newSims.length,
+      banks: banks.added.length, incomes: newIncomes.length, bills: newBills.length, simItems: newSims.length, ...extra,
     },
   };
 }
