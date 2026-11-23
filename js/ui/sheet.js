@@ -5,6 +5,12 @@
 import { esc } from '../core/dom.js';
 
 const stack = [];
+const idle = []; // ações esperando todas as folhas fecharem
+
+/** Roda fn quando não houver nenhuma folha aberta (ex.: comemorar conquista depois de salvar). */
+export function whenIdle(fn) {
+  if (!stack.length) fn(); else idle.push(fn);
+}
 let ownBacks = 0; // history.back() chamados por nós (não devem fechar outra folha)
 
 window.addEventListener('popstate', () => {
@@ -54,7 +60,10 @@ export function openSheet({ title, body, foot = '', onMount, onClose }) {
       if (i >= 0) stack.splice(i, 1);
       if (!fromHistory && history.state?.sheet) { ownBacks += 1; history.back(); }
       setTimeout(() => { el.remove(); backdrop.remove(); }, 360);
-      if (!stack.length) document.body.style.overflow = '';
+      if (!stack.length) {
+        document.body.style.overflow = '';
+        if (idle.length) { const next = idle.shift(); setTimeout(() => whenIdle(next), 420); }
+      }
       prevFocus?.focus?.({ preventScroll: true });
       onClose?.();
     },

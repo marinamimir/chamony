@@ -25,8 +25,11 @@ import simulador from './features/simulator.js';
 import lixeira from './features/trash.js';
 import ajustes from './features/settings.js';
 import relatorio from './features/report.js';
+import conquistas, { checkUnlocks } from './features/achievements.js';
+import { openQuickAdd } from './features/keypad.js';
+import { feedback } from './ui/feedback.js';
 
-const VIEWS = { inicio, compras, cartoes, metas, mais, resumo, comparativo, renda, contas, categorias, recorrentes, simulador, lixeira, ajustes, relatorio };
+const VIEWS = { inicio, compras, cartoes, metas, mais, resumo, comparativo, renda, contas, categorias, recorrentes, simulador, lixeira, ajustes, relatorio, conquistas };
 const MONTH_VIEWS = new Set(['compras', 'cartoes', 'resumo', 'comparativo', 'renda', 'recorrentes', 'simulador', 'categorias', 'relatorio']);
 
 const $view = document.getElementById('view');
@@ -37,6 +40,7 @@ const $logo = document.getElementById('topbar-logo');
 const $eye = document.getElementById('toggle-hide');
 let route = parseHash();
 let lastSettings = '';
+let unlockTimer = null;
 
 function ctx() {
   return { d: store.get(), ui, query: route.query, root: $view, rerender: () => renderView(), go };
@@ -73,7 +77,7 @@ function renderView({ enter = false } = {}) {
 // Ações globais (as telas podem ter as próprias em view.actions)
 // ---------------------------------------------------------------------------
 const GLOBAL = {
-  'add-expense': () => openExpenseForm(),
+  'add-expense': () => { feedback('tap'); return store.get().settings.addMode === 'keypad' ? openQuickAdd() : openExpenseForm(); },
   'edit-expense': (el) => openExpenseForm({ groupId: el.dataset.gid }),
   'month-prev': () => { ui.ym = shiftYM(ui.ym, -1); renderView(); },
   'month-next': () => { ui.ym = shiftYM(ui.ym, 1); renderView(); },
@@ -115,6 +119,8 @@ function boot() {
     if (cur !== lastSettings) { lastSettings = cur; applyTheme(s.settings); }
     renderView();
     reminders.scheduleSync(s);
+    clearTimeout(unlockTimer);
+    unlockTimer = setTimeout(checkUnlocks, 350); // depois da folha/toast da ação, comemora a conquista
   });
   onRoute((r) => {
     const changed = r.id !== route.id;
@@ -135,6 +141,7 @@ function boot() {
   endSplash(d.settings);
   registerSW();
   // Lembretes: atualiza a lista do service worker e confere o que vence (avisa uma vez por item).
+  setTimeout(checkUnlocks, 1800);
   reminders.writeReminders(d).then(() => { if (d.settings.notifications) reminders.checkNow(); }).catch(() => {});
 }
 

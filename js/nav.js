@@ -17,6 +17,7 @@ export const MORE_ITEMS = [
   { id: 'categorias', title: 'Categorias', desc: 'Cores e ícones', icon: 'fa-tags', color: '#F9C5D1' },
   { id: 'recorrentes', title: 'Recorrentes', desc: 'Lembretes de contas', icon: 'fa-rotate', color: '#FFF0B3' },
   { id: 'simulador', title: 'Simulador', desc: 'E se eu comprar…?', icon: 'fa-calculator', color: '#FFD9B8' },
+  { id: 'conquistas', title: 'Conquistas', desc: 'Jardim, selos e níveis', icon: 'fa-spa', color: '#FFF0B3' },
   { id: 'lixeira', title: 'Lixeira', desc: 'Compras excluídas', icon: 'fa-trash-can', color: '#D9D9E3' },
   { id: 'ajustes', title: 'Ajustes', desc: 'Tema, backup, AeroSync', icon: 'fa-gear', color: '#E4D4F4' },
 ];

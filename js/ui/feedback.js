@@ -20,8 +20,11 @@ const SONGS = {
   soft: [[440, 0, 0.12]],
 };
 
+// O navegador só permite som e vibração depois que a pessoa tocou na tela.
+const touched = () => navigator.userActivation ? navigator.userActivation.hasBeenActive : true;
+
 export function sound(kind = 'tap') {
-  if (!store.get()?.settings.sound) return;
+  if (!store.get()?.settings.sound || !touched()) return;
   const a = audio();
   if (!a) return;
   const now = a.currentTime;
@@ -38,7 +41,7 @@ export function sound(kind = 'tap') {
 
 const PATTERNS = { tap: 8, save: 14, success: [18, 60, 18, 60, 30], soft: 10 };
 export function vibrate(kind = 'tap') {
-  if (!store.get()?.settings.vibration || !navigator.vibrate) return;
+  if (!store.get()?.settings.vibration || !navigator.vibrate || !touched()) return;
   try { navigator.vibrate(PATTERNS[kind] || 10); } catch { /* ignore */ }
 }
 

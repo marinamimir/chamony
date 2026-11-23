@@ -5,7 +5,7 @@
    - Nenhum dado financeiro passa por aqui: os dados ficam no localStorage do aparelho.
    Publicou mudança? Suba CACHE_VERSION (e APP_VERSION em js/version.js).
    `node tools/check-sw.mjs` confere se todo arquivo do app está na lista. */
-const CACHE_VERSION = 'v0.1.0';
+const CACHE_VERSION = 'v0.2.0';
 const CACHE = `chamony-${CACHE_VERSION}`;
 const APP_SHELL = [
   './',
@@ -15,6 +15,7 @@ const APP_SHELL = [
   './css/themes.css',
   './css/base.css',
   './css/components.css',
+  './css/icons-own.css',
   './js/prepaint.js',
   './js/app.js',
   './js/version.js',
@@ -24,6 +25,7 @@ const APP_SHELL = [
   './js/core/dates.js',
   './js/core/dom.js',
   './js/core/finance.js',
+  './js/core/game.js',
   './js/core/money.js',
   './js/data/aerosync.js',
   './js/data/backup.js',
@@ -32,6 +34,7 @@ const APP_SHELL = [
   './js/data/reminders.js',
   './js/ui/charts.js',
   './js/ui/feedback.js',
+  './js/ui/garden.js',
   './js/ui/palettes.js',
   './js/ui/illustrations.js',
   './js/ui/parts.js',
@@ -41,6 +44,8 @@ const APP_SHELL = [
   './js/ui/toast.js',
   './js/ui/tone.js',
   './js/features/appearance.js',
+  './js/features/achievements.js',
+  './js/features/keypad.js',
   './js/features/banks.js',
   './js/features/budget.js',
   './js/features/cards.js',

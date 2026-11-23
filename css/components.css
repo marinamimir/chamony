@@ -477,3 +477,38 @@ details.more[open] summary i { transform: rotate(180deg); }
   .report__h, .rtable tr { break-inside: avoid; }
   .donut-seg { animation: none !important; }
 }
+
+/* ---------- Conquistas e jardim ---------- */
+.garden { width: 100%; height: auto; display: block; }
+.garden-card { padding: 10px; }
+.g-flower { transform-box: fill-box; transform-origin: bottom center; animation: g-grow 900ms var(--ease-spring) both; }
+@keyframes g-grow { from { transform: scaleY(0); opacity: 0; } }
+.g-fly { animation: g-fly 4s ease-in-out infinite alternate; }
+@keyframes g-fly { 50% { transform: translate(var(--fx, 6px), -6px); } }
+.g-sun { animation: g-pulse 5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes g-pulse { 50% { transform: scale(1.06); } }
+.ach-mini { display: block; text-decoration: none; color: inherit; }
+.ach-mini__garden { margin: -6px -6px 10px; }
+.badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+.badge-tile { background: var(--ui-surface); border: 1px solid var(--ui-border); border-radius: var(--r-md); padding: 12px 10px; text-align: center; box-shadow: var(--ui-shadow-1); }
+.badge-tile__ico { width: 52px; height: 52px; margin: 0 auto 8px; border-radius: 50%; display: grid; place-items: center; font-size: 1.2rem;
+  background: radial-gradient(circle at 35% 30%, #fff, color-mix(in srgb, var(--c) 70%, var(--ui-surface))); color: color-mix(in srgb, var(--c) 35%, #2B3040);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 40%, transparent); }
+.badge-tile b { display: block; font-size: var(--ui-type-xs); font-weight: 900; color: var(--ui-strong); }
+.badge-tile small { display: block; font-size: var(--ui-type-2xs); font-weight: 700; color: var(--ui-subtle); margin-top: 2px; }
+.badge-tile.is-locked { box-shadow: none; background: var(--ui-soft-surface); }
+.badge-tile.is-locked .badge-tile__ico { filter: grayscale(1); opacity: .5; }
+.dark .badge-tile__ico { background: color-mix(in srgb, var(--c) 30%, var(--ui-surface)); color: var(--c); }
+
+/* ---------- Teclado rápido ---------- */
+.kp-amount { text-align: center; font-size: 2.6rem; font-weight: 800; color: var(--ui-strong); padding: 6px 0 4px; letter-spacing: -.02em; }
+.kp-desc { text-align: center; min-height: 44px; }
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+.key {
+  min-height: 60px; border: 0; border-radius: 20px; background: var(--ui-soft-surface); color: var(--ui-strong);
+  font-family: var(--ui-font-num); font-size: 1.5rem; font-weight: 700; transition: transform var(--t-fast), background var(--t-fast);
+}
+.key:active { transform: scale(.94); background: color-mix(in srgb, var(--ui-accent) 18%, var(--ui-soft-surface)); }
+.fav-pill i { color: #E2B13C !important; }
+.garden-card .garden { max-height: 300px; margin: 0 auto; }
+.dark .garden { filter: brightness(.82) saturate(.85); }

@@ -123,7 +123,11 @@ samples/    extratos anonimizados (fase 2)
 - **CSP** no `index.html` (`script-src 'self'`): por isso o tema inicial é aplicado por `js/prepaint.js`, não por script inline.
 - **Logo:** gerado por `tools/make-logo.py` (o "R$" vira contorno a partir da Nunito, sem depender de fonte no aparelho). PNGs por `tools/make-icons.mjs` (Chromium do Playwright).
 - **Service worker:** precache da lista `APP_SHELL`; navegação rede-primeiro, demais arquivos cache-primeiro com atualização em segundo plano; aviso "Nova versão · Atualizar". Ao publicar: subir `CACHE_VERSION` em `sw.js` e `APP_VERSION` em `js/version.js`; `node tools/check-sw.mjs` confere a lista.
-- **Opções adiadas** para as fases seguintes: modo de adicionar com teclado numérico + favoritos, conjunto de ícones próprio, sons/vibração e conquistas (fase 4); limite por categoria (fase 3).
+- **Gamificação** (`js/core/game.js`): tudo calculado a partir dos dados; só a data de cada selo fica em `game.unlocked`. Sequência = dias com compra criada no app (importadas não contam; ontem vazio quebra). Nível = pontos dos selos + 2 por dia registrado. Selo novo é comemorado depois que as folhas abertas fecham (`whenIdle`); muitos de uma vez (ex.: importação) viram só um aviso. Jardim (`js/ui/garden.js`): selos = camomilas abertas, sequência = botões, metas batidas = borboletas, mês no azul = sol.
+- **Sons e vibração** (`js/ui/feedback.js`): Web Audio gerado na hora (sem arquivos); só tocam depois do primeiro toque na tela (regra do navegador).
+- **Teclado rápido** (`js/features/keypad.js`): favoritos fixados (estrela no formulário) + gastos que se repetem; "Mais" abre o formulário completo já preenchido.
+- **Ícones próprios:** `tools/make-icons-own.mjs` gera `css/icons-own.css` (traço arredondado, aplicado por `mask` sobre o nome do ícone do Font Awesome com `<html class="icons-own">`). Ícone sem desenho próprio continua com o Font Awesome.
+- **Fase 2 (extratos)** ainda aguarda os exemplos em `samples/`.
 
 ## Limitações do navegador no Android (dados e backup)
 

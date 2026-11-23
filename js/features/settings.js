@@ -13,6 +13,7 @@ import { mergeData, replaceData } from '../data/merge.js';
 import { APP_VERSION } from '../version.js';
 import { appearanceSection, appearanceActions } from './appearance.js';
 import * as reminders from '../data/reminders.js';
+import { feedback } from '../ui/feedback.js';
 
 const countGroups = (list) => new Set((list || []).map((e) => e.groupId || e.id)).size;
 
@@ -141,6 +142,18 @@ export default {
         <p class="tiny subtle">${s.tone === 'warm' ? 'Ex.: “Respira, ainda sobram R$ 300 este mês.”' : s.tone === 'neutral' ? 'Ex.: “Disponível no mês: R$ 300.”' : 'Ex.: “Sobram R$ 300 pra regar o jardim.”'}</p>
       </section>
 
+      ${sectionHead('Jeitinho do app')}
+      <section class="card">
+        <span class="label">Adicionar gasto pelo +</span>
+        <div class="mb-3">${seg('addMode', [['modal', 'Formulário completo'], ['keypad', 'Teclado rápido']], s.addMode)}</div>
+        <span class="label">Ícones</span>
+        <div class="mb-3">${seg('iconSet', [['fa', 'Clássicos'], ['own', 'Arredondados']], s.iconSet)}</div>
+        <span class="label">Conquistas</span>
+        <div class="mb-3">${seg('achievements', [['badges', 'Selos e níveis'], ['garden', 'Jardim'], ['both', 'Os dois']], s.achievements)}</div>
+        <div class="setting-row"><div><b>Sons suaves</b><small>Sininhos ao salvar e nas conquistas</small></div>${toggle(s.sound, 'toggle-setting', 'Sons suaves', 'data-key="sound"')}</div>
+        <div class="setting-row"><div><b>Vibração</b><small>Toque leve ao salvar e no teclado</small></div>${toggle(s.vibration, 'toggle-setting', 'Vibração', 'data-key="vibration"')}</div>
+      </section>
+
       ${sectionHead('Privacidade e orçamento')}
       <section class="card">
         <div class="setting-row"><div><b>Abrir com valores escondidos</b><small>Mostre tocando no olho, no topo</small></div>${toggle(s.hideOnOpen, 'toggle-setting', 'Abrir com valores escondidos', 'data-key="hideOnOpen"')}</div>
@@ -205,7 +218,11 @@ export default {
   actions: {
     ...appearanceActions,
     seg: (el) => setSetting(el.dataset.name, el.dataset.value),
-    'toggle-setting': (el) => setSetting(el.dataset.key, !store.get().settings[el.dataset.key]),
+    'toggle-setting': (el) => {
+      const key = el.dataset.key;
+      setSetting(key, !store.get().settings[key]);
+      if (key === 'sound' || key === 'vibration') feedback('save');
+    },
     limit: () => openLimitSheet(),
     'warn-days': (el) => setSetting('dueWarnDays', Math.min(15, Math.max(1, store.get().settings.dueWarnDays + Number(el.dataset.delta)))),
     export: async () => { await backup.downloadBackup(store.get()); toast('Backup exportado'); },
