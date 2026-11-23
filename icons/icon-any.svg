@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="ChaMony">
+  <title>ChaMony</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9AA8C2"/>
+      <stop offset="1" stop-color="#6E7D99"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <g transform="translate(35.8 35.8) scale(0.86)">
+  <defs>
+    <linearGradient id="apg" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#FFF1CF"/>
+      <stop offset=".45" stop-color="#FFFBF1"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+    <radialGradient id="acg" cx=".38" cy=".32" r=".8">
+      <stop offset="0" stop-color="#FFF3BF"/>
+      <stop offset=".55" stop-color="#FCE08A"/>
+      <stop offset="1" stop-color="#F2C45F"/>
+    </radialGradient>
+    <filter id="asoft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#8A6A3A" flood-opacity=".16"/>
+    </filter>
+    <g id="apetal">
+      <path transform="translate(256 256)" d="M0 -40 C -50 -70 -58 -170 -14 -214 Q 0 -226 14 -214 C 58 -170 50 -70 0 -40 Z" fill="url(#apg)" stroke="#EEDFC0" stroke-width="3"/>
+      <path transform="translate(256 256)" d="M0 -70 Q 3 -140 0 -196" fill="none" stroke="#F1E4C6" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </defs>
+  <g filter="url(#asoft)">
+    <g transform="rotate(0 256 256)"><use href="#apetal"/></g>
+    <g transform="rotate(45 256 256)"><use href="#apetal"/></g>
+    <g transform="rotate(90 256 256)"><use href="#apetal"/></g>
+    <g transform="rotate(135 256 256)"><use href="#apetal"/></g>
+    <g transform="rotate(180 256 256)"><use href="#apetal"/></g>
+    <g transform="rotate(225 256 256)"><use href="#apetal"/></g>
+    <g transform="rotate(270 256 256)"><use href="#apetal"/></g>
+    <g transform="rotate(315 256 256)"><use href="#apetal"/></g>
+  </g>
+  <g filter="url(#asoft)">
+    <circle cx="256" cy="256" r="74" fill="url(#acg)"/>
+    <circle cx="256" cy="256" r="74" fill="none" stroke="#E7B453" stroke-width="5"/>
+    <circle cx="256" cy="256" r="60" fill="none" stroke="#F7D987" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round"/>
+  </g>
+  <path transform="translate(209.9 282.1) scale(0.074)" d="M156 9Q112 9 88 -15Q64 -40 64 -84V-612Q64 -657 89 -681Q113 -705 157 -705H403Q523 -705 588 -646Q654 -588 654 -484Q654 -417 624 -368Q595 -318 539 -292Q484 -265 403 -265L411 -283H459Q502 -283 535 -262Q568 -242 590 -200L640 -110Q656 -81 655 -53Q654 -26 633 -8Q613 9 574 9Q535 9 510 -7Q486 -23 467 -57L376 -224Q364 -246 346 -255Q327 -263 303 -263H248V-84Q248 -40 225 -15Q202 9 156 9ZM248 -393H370Q423 -393 451 -414Q479 -435 479 -479Q479 -521 451 -543Q423 -564 370 -564H248Z M985 124Q956 124 936 104Q916 84 916 54V-20L946 7Q879 4 830 -10Q781 -24 750 -38Q724 -50 714 -72Q703 -94 705 -117Q708 -140 722 -159Q736 -178 759 -184Q781 -191 811 -178Q831 -167 871 -155Q912 -144 972 -144Q1014 -144 1038 -152Q1063 -160 1073 -173Q1084 -187 1084 -203Q1084 -218 1077 -228Q1069 -239 1052 -248Q1035 -256 1005 -263L892 -287Q799 -308 753 -358Q708 -407 708 -486Q708 -546 738 -594Q767 -641 821 -671Q874 -701 946 -709L916 -692V-759Q916 -789 936 -809Q956 -829 985 -829Q1015 -829 1035 -809Q1055 -789 1055 -759V-692L1025 -711Q1063 -710 1107 -698Q1151 -687 1184 -667Q1207 -655 1216 -634Q1226 -613 1223 -591Q1221 -570 1208 -553Q1194 -536 1172 -531Q1149 -525 1118 -538Q1095 -548 1066 -555Q1038 -561 994 -561Q941 -561 913 -542Q884 -523 884 -493Q884 -473 901 -460Q917 -446 961 -436L1075 -411Q1170 -390 1215 -341Q1261 -293 1261 -216Q1261 -156 1232 -110Q1203 -64 1151 -35Q1100 -6 1032 3L1055 -21V54Q1055 84 1035 104Q1016 124 985 124Z" fill="#B98731"/>
+  </g>
+</svg>
