@@ -32,7 +32,7 @@ export const descKey = (s) => fold(s).replace(/\b\d{2}\/\d{2}\b/g, '').replace(/
 const tokens = (s) => descKey(s).split(' ').filter((t) => t.length >= 4 && !STOP.has(t));
 
 const KEYWORDS = [
-  [/uber|99pop|99 ?app|taxi|cabify|metro|onibus|bilhete|estacion|posto|ipiranga|shell|combust/, ['transporte']],
+  [/uber|99pop|99 ?app|99 tecnologia|taxi|cabify|metro|onibus|bilhete|estacion|posto|ipiranga|shell|combust|transportes? (de )?passageiros|passagem/, ['transporte']],
   [/ifood|99food|rappi|restaur|lanch|pizz|burger|poke|sushi|padaria|cafe|bar |cervej|sorvet|acai|food/, ['alimenta', 'comida', 'restaur']],
   [/zaffari|carrefour|assai|atacad|supermerc|mercado|hortifrut|sacolao|emporio/, ['mercado', 'supermerc']],
   [/farma|drogar|raia|pague menos|panvel|clinic|medic|laborat|hospital|odonto|qualidoc|saude/, ['saude', 'farmac']],
@@ -83,6 +83,15 @@ export function makeSuggester(d) {
   };
 }
 
+/** Nome normalizado (sem acento, só letras) e comparação tolerante a abreviações ("FULANA B DE TAL" = "Fulana Beltrana de Tal"). */
+export const nameKey = (s) => fold(s).replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim();
+export function sameName(a, b) {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const A = a.split(' '), B = b.split(' ');
+  return A.length >= 2 && B.length >= 2 && A[0] === B[0] && A.at(-1) === B.at(-1);
+}
+
 /** "MP*ALIEXPRESSO" → "Aliexpresso", "DL *UberRidesS" → "UberRidesS". Mantém o original no histórico de busca. */
 export function prettyDesc(s) {
   let t = String(s).replace(/^(DL|MP|PG|PAG|EC|S2P|SHOPEE|IFD|UBER|HTM)\s*\*\s*/i, (m, p) => (/shopee/i.test(p) ? 'Shopee · ' : /uber/i.test(p) ? 'Uber · ' : ''));
@@ -107,16 +116,20 @@ export function buildReview(d, parsed, parser, { cardId = 'pix' } = {}) {
   const seen = new Map();
   const knownImp = new Set([...d.expenses, ...d.trash, ...d.incomes].map((x) => x.imp).filter(Boolean));
   const upcoming = parsed.upcoming || [];
+  // Seus nomes (aprendidos do extrato do Itaú ou marcados na revisão) → transferência entre suas contas.
+  const own = [...(d.settings.ownNames || []), meta.holder].filter(Boolean).map(nameKey);
+  const isOwn = (name) => !!name && own.some((o) => sameName(o, nameKey(name)));
 
   const items = parsed.lines.map((l) => {
     const original = l.desc;
     const desc = prettyDesc(l.desc);
-    const amount = Math.abs(l.amount);
-    const income = l.amount < 0 || l.type?.startsWith('income');
+    const income = l.type?.startsWith('income') || (l.amount < 0 && !['refund', 'card-payment', 'transfer'].includes(l.type));
+    const amount = l.type === 'refund' ? l.amount : Math.abs(l.amount); // estorno no cartão abate a fatura (valor negativo)
     // Chave estável: mesma compra em outro arquivo → mesma chave (parcelas: sem o valor, que varia centavos).
-    let key = `${scope}:${l.date}:${descKey(original).replace(/\s/g, '')}:${l.inst ? `p${l.inst.total}` : amount}`;
+    let key = l.key || `${scope}:${l.date}:${descKey(original).replace(/\s/g, '')}:${l.inst ? `p${l.inst.total}` : amount}`;
     const n = (seen.get(key) || 0) + 1; seen.set(key, n);
     if (n > 1) key += `#${n}`;
+    if (l.counterpart && isOwn(l.counterpart)) { l.type = 'transfer'; l.reason = 'Transferência entre suas contas'; }
     const imp = key;
     const kindCat = /tarifa/i.test(l.kind || '') ? 'tarifa' : /boleto/i.test(l.kind || '') ? 'boleto' : '';
     const sug = income ? { catId: '', why: '' } : suggest(original, l.bankCat || kindCat);
@@ -125,6 +138,7 @@ export function buildReview(d, parsed, parser, { cardId = 'pix' } = {}) {
     const it = {
       id: uid('imp'), kind: income ? 'income' : 'expense', date: l.date, desc, original, amount, catId: sug.catId, why: sug.why,
       inst: l.inst || null, nextAmount: next?.amount ?? null, imp, include: true, status: 'new', reason: l.reason || '', future: !!l.future, bankCat: l.bankCat || '',
+      counterpart: l.type === 'transfer' ? '' : (l.counterpart || ''),
     };
     // Padrões combinados: fatura e transferência entre contas ficam de fora; só rendimentos entram como renda.
     if (l.type === 'card-payment' || l.type === 'transfer') it.include = false;
@@ -135,7 +149,7 @@ export function buildReview(d, parsed, parser, { cardId = 'pix' } = {}) {
       // Parecido com algo registrado à mão (mesmo valor, até 3 dias de diferença, mesma forma de pagamento).
       const per = amount;
       const hit = d.expenses.find((e) => !e.imp && e.amount === per && Math.abs(daysBetween(e.purchaseDate, l.date)) <= 3 && (isCard ? e.cardId === cardId : e.cardId === 'pix'));
-      if (hit) { it.include = false; it.status = 'maybe'; it.reason = `Parece “${hit.desc}”, já registrado`; }
+      if (hit && amount > 0) { it.include = false; it.status = 'maybe'; it.reason = `Parece “${hit.desc}”, já registrado`; }
     }
     return it;
   });
@@ -143,7 +157,7 @@ export function buildReview(d, parsed, parser, { cardId = 'pix' } = {}) {
 }
 
 /** Aplica os itens marcados num clone dos dados. Devolve { data, stats }. */
-export function applyImport(d, items, { isCard, src, cardId, meta }) {
+export function applyImport(d, items, { isCard, src, cardId, meta }, extraOwn = []) {
   const next = structuredClone(d);
   const now = new Date().toISOString();
   let exp = 0, inc = 0;
@@ -168,6 +182,10 @@ export function applyImport(d, items, { isCard, src, cardId, meta }) {
       });
     }
     exp += 1;
+  }
+  // Lembra o nome do titular (só no aparelho) para reconhecer transferências entre suas contas nos próximos extratos.
+  for (const nm of [meta.holder, ...(extraOwn || [])].filter(Boolean)) {
+    if (!next.settings.ownNames.some((o) => sameName(nameKey(o), nameKey(nm)))) next.settings.ownNames = [...next.settings.ownNames, nm].slice(-10);
   }
   next.meta.importedFrom = [...(next.meta.importedFrom || []), { origin: src, at: now }].slice(-20);
   return { data: next, stats: { exp, inc } };

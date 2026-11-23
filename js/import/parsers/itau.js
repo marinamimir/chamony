@@ -78,7 +78,7 @@ function parseConta(pdf) {
     return holderKey.length >= 2 && f.includes(holderKey[0]) && f.includes(holderKey[holderKey.length - 1]);
   };
   return {
-    meta: { bank: 'Itaú', kind: 'conta', from: period ? toIso(period[1]) : null, to: period ? toIso(period[2]) : null },
+    meta: { bank: 'Itaú', kind: 'conta', holder, from: period ? toIso(period[1]) : null, to: period ? toIso(period[2]) : null },
     lines: out.map((l) => {
       // Valor no extrato: negativo = saída. No ChaMony: amount > 0 = gasto; < 0 = entrada.
       const outflow = l.amount < 0;

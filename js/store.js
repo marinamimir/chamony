@@ -30,6 +30,7 @@ export const DEFAULT_SETTINGS = {
   achievements: 'both',  // 'badges' (selos e níveis) | 'garden' (jardim) | 'both'
   notifications: false,  // lembretes com notificação do sistema
   lastSyncAt: null,      // última sincronização por arquivo
+  ownNames: [],          // seu nome como aparece nos bancos (só no aparelho): reconhece transferências entre suas contas
 };
 export const BG_OPTIONS = ['plain', 'gradient', 'dots', 'flowers'];
 
@@ -128,6 +129,7 @@ export function normalize(raw) {
       achievements: ['badges', 'garden', 'both'].includes(s.achievements) ? s.achievements : 'both',
       notifications: !!s.notifications,
       lastSyncAt: str(s.lastSyncAt, 40) || null,
+      ownNames: arr(s.ownNames).filter((n) => typeof n === 'string' && n.trim()).map((n) => n.trim().slice(0, 80)).slice(0, 10),
     },
     budget: {
       monthlyLimit: Math.max(0, int(raw.budget?.monthlyLimit)),

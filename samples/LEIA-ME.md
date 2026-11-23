@@ -10,7 +10,8 @@ repositório, para entender o formato; aqui ficam só **extratos falsos no mesmo
 | Itaú | Conta corrente | PDF | pronto | `itau/conta.exemplo.pdf` |
 | Itaú | Fatura do cartão | PDF | pronto | `itau/cartao.exemplo.pdf` |
 | Itaú | Conta / cartão | CSV | aguardando exemplo | |
-| Nubank | Conta / cartão | CSV / PDF | aguardando exemplo | |
+| Nubank | Conta | CSV | pronto | `nubank/conta.exemplo.csv` |
+| Nubank | Fatura do cartão | CSV | pronto | `nubank/Nubank_2026-12-04.exemplo.csv` |
 
 Ao mandar um exemplo real: troque nome, CPF, endereço e números de conta/cartão por texto falso do
 mesmo tamanho; mantenha cabeçalhos, datas, "Parcela 2/10", estornos e pagamentos. PDF com senha:
