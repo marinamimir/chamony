@@ -188,7 +188,7 @@ export function normalize(raw) {
       id: str(f.id, 80) || uid('fav'), desc: str(f.desc, 140), amount: Math.max(0, int(f.amount)), catId: str(f.catId, 80), cardId: str(f.cardId, 80) || 'pix',
     })),
     game: { unlocked: Object.fromEntries(Object.entries(raw.game?.unlocked || {}).filter(([k, v]) => typeof k === 'string' && typeof v === 'string')) },
-    meta: { importedFrom: arr(raw.meta?.importedFrom).slice(-20) },
+    meta: { importedFrom: arr(raw.meta?.importedFrom).slice(-20), updatedAt: str(raw.meta?.updatedAt, 40) || null },
   };
   if (!out.categories.length) out.categories = d.categories;
   return out;
@@ -283,6 +283,7 @@ export function commit(mutator) {
 }
 
 function persist() {
+  state.meta.updatedAt = new Date().toISOString();
   const ok = safeSet(KEY, JSON.stringify(state));
   if (!ok) window.dispatchEvent(new CustomEvent('chamony:storage-error', { detail: lastError }));
   listeners.forEach((fn) => fn(state));

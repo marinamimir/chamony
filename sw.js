@@ -28,6 +28,8 @@ const APP_SHELL = [
   './js/data/aerosync.js',
   './js/data/backup.js',
   './js/data/merge.js',
+  './js/data/idb.js',
+  './js/data/reminders.js',
   './js/ui/charts.js',
   './js/ui/feedback.js',
   './js/ui/palettes.js',
@@ -51,6 +53,8 @@ const APP_SHELL = [
   './js/features/income.js',
   './js/features/more.js',
   './js/features/overview.js',
+  './js/features/limits.js',
+  './js/features/report.js',
   './js/features/purchases.js',
   './js/features/recurring.js',
   './js/features/settings.js',
@@ -82,13 +86,56 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('chamony-') && k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('chamony-') && k !== CACHE && k !== DATA_CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
 
 self.addEventListener('message', (event) => {
   if (event.data === 'skip-waiting') self.skipWaiting();
+  if (event.data === 'check-reminders') event.waitUntil(checkReminders());
+});
+
+// ---------------------------------------------------------------------------
+// Lembretes (sem servidor): a lista é gravada pelo app em DATA_CACHE.
+// ---------------------------------------------------------------------------
+const DATA_CACHE = 'chamony-data';
+const isoToday = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+
+async function checkReminders() {
+  const c = await caches.open(DATA_CACHE);
+  const res = await c.match('./__lembretes.json');
+  if (!res) return;
+  const data = await res.json();
+  if (!data.enabled || Notification.permission !== 'granted') return;
+  const logRes = await c.match('./__notificados.json');
+  const log = logRes ? await logRes.json() : {};
+  const today = isoToday();
+  for (const it of data.items || []) {
+    if (log[it.key] || today < it.notifyOn || today > it.date) continue;
+    await self.registration.showNotification(it.title, {
+      body: it.body, tag: it.key, icon: 'icons/icon-192.png', badge: 'icons/icon-maskable-192.png', data: { url: it.url },
+    });
+    log[it.key] = today;
+  }
+  // Esquece avisos com mais de 60 dias.
+  const limit = new Date(Date.now() - 60 * 864e5).toISOString().slice(0, 10);
+  for (const k of Object.keys(log)) if (log[k] < limit) delete log[k];
+  await c.put('./__notificados.json', new Response(JSON.stringify(log), { headers: { 'Content-Type': 'application/json' } }));
+}
+
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'chamony-lembretes') event.waitUntil(checkReminders());
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = new URL(`./${event.notification.data?.url || ''}`, self.registration.scope).href;
+  event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+    const win = list.find((w) => w.url.startsWith(self.registration.scope));
+    if (win) { win.navigate(url).catch(() => {}); return win.focus(); }
+    return self.clients.openWindow(url);
+  }));
 });
 
 self.addEventListener('fetch', (event) => {

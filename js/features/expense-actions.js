@@ -4,6 +4,7 @@ import * as store from '../store.js';
 import { toast } from '../ui/toast.js';
 import { catSnapshot } from '../core/finance.js';
 import { isISO } from '../core/dates.js';
+import { deleteReceipt } from '../data/idb.js';
 
 const gidOf = (e) => e.groupId || e.id;
 
@@ -34,7 +35,16 @@ export function restoreGroups(gids) {
 
 export function purgeGroups(gids) {
   const set = new Set(gids);
+  const gone = store.get().trash.filter((e) => set.has(gidOf(e)));
   store.commit((s) => { s.trash = s.trash.filter((e) => !set.has(gidOf(e))); });
+  cleanupReceipts(gone);
+}
+
+/** Apaga do IndexedDB as fotos que nenhuma compra (nem a lixeira) usa mais. */
+export function cleanupReceipts(removed) {
+  const d = store.get();
+  const used = new Set([...d.expenses, ...d.trash].map((e) => e.receiptId).filter(Boolean));
+  [...new Set(removed.map((e) => e.receiptId).filter(Boolean))].filter((id) => !used.has(id)).forEach((id) => deleteReceipt(id).catch(() => {}));
 }
 
 /** Edição em massa: troca forma de pagamento, categoria e/ou data de todas as compras selecionadas. */

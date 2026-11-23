@@ -8,6 +8,7 @@ import { monthBar, chip, sectionHead } from '../ui/parts.js';
 import { donut, catBars } from '../ui/charts.js';
 import { emptyState } from '../ui/illustrations.js';
 import { filterBar, openFilters } from './purchases.js';
+import { limitsCard } from './limits.js';
 
 const PERIODS = [['Madrugada', 0, 6], ['Manhã', 6, 12], ['Tarde', 12, 18], ['Noite', 18, 24]];
 
@@ -53,6 +54,7 @@ export default {
           <div class="list-row__value">${m(p.sum)}</div>
         </div>`).join('')}</div>
 
+      ${limitsCard(d, ym) ? `${sectionHead('Limites por categoria')}${limitsCard(d, ym)}` : ''}
       ${sectionHead('Por categoria')}
       ${list.length ? `<section class="card">${donut(cats, spent)}<div class="divider"></div>${catBars(cats)}</section>`
         : `<div class="card">${emptyState('tea', 'Sem gastos neste mês', 'Quando houver compras, a rosca por categoria aparece aqui.')}</div>`}

@@ -8,6 +8,7 @@ import { parseHash, onRoute, go } from './router.js';
 import { renderBottomNav, renderSidebar, markCurrent, MORE_ITEMS } from './nav.js';
 import { shiftYM, currentYM } from './core/dates.js';
 import { openExpenseForm } from './features/expense-form.js';
+import * as reminders from './data/reminders.js';
 
 import inicio from './features/home.js';
 import compras from './features/purchases.js';
@@ -23,9 +24,10 @@ import recorrentes from './features/recurring.js';
 import simulador from './features/simulator.js';
 import lixeira from './features/trash.js';
 import ajustes from './features/settings.js';
+import relatorio from './features/report.js';
 
-const VIEWS = { inicio, compras, cartoes, metas, mais, resumo, comparativo, renda, contas, categorias, recorrentes, simulador, lixeira, ajustes };
-const MONTH_VIEWS = new Set(['compras', 'cartoes', 'resumo', 'comparativo', 'renda', 'recorrentes', 'simulador', 'categorias']);
+const VIEWS = { inicio, compras, cartoes, metas, mais, resumo, comparativo, renda, contas, categorias, recorrentes, simulador, lixeira, ajustes, relatorio };
+const MONTH_VIEWS = new Set(['compras', 'cartoes', 'resumo', 'comparativo', 'renda', 'recorrentes', 'simulador', 'categorias', 'relatorio']);
 
 const $view = document.getElementById('view');
 const $title = document.getElementById('topbar-title');
@@ -112,6 +114,7 @@ function boot() {
     const cur = JSON.stringify(s.settings);
     if (cur !== lastSettings) { lastSettings = cur; applyTheme(s.settings); }
     renderView();
+    reminders.scheduleSync(s);
   });
   onRoute((r) => {
     const changed = r.id !== route.id;
@@ -131,6 +134,8 @@ function boot() {
 
   endSplash(d.settings);
   registerSW();
+  // Lembretes: atualiza a lista do service worker e confere o que vence (avisa uma vez por item).
+  reminders.writeReminders(d).then(() => { if (d.settings.notifications) reminders.checkNow(); }).catch(() => {});
 }
 
 function endSplash(settings) {

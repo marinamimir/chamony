@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const sw = readFileSync(path.join(root, 'sw.js'), 'utf8');
-const listed = new Set([...sw.matchAll(/'\.\/([^']*)'/g)].map((m) => m[1]));
+const listed = new Set([...sw.matchAll(/'\.\/([^']*)'/g)].map((m) => m[1]).filter((f) => !f.startsWith('__')));
 const walk = (dir) => readdirSync(path.join(root, dir)).flatMap((f) => {
   const rel = path.posix.join(dir, f);
   return statSync(path.join(root, rel)).isDirectory() ? walk(rel) : [rel];

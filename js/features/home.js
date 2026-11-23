@@ -12,6 +12,7 @@ import { chip, expenseRow, sectionHead } from '../ui/parts.js';
 import { freePhrase, limitPhrase, greeting } from '../ui/tone.js';
 import { emptyState, heroFlower } from '../ui/illustrations.js';
 import { openLimitSheet } from './budget.js';
+import { limitsCard } from './limits.js';
 
 function heroCard(d, ym, tone) {
   const free = F.freeBalance(d, ym);
@@ -149,6 +150,7 @@ export default {
         ${limitCard(d, ym, tone)}
         ${compareCard(d, ym)}
       </div>
+      ${limitsCard(d, ym, { max: 4 }) ? `${sectionHead('Limites por categoria', '<a class="link-btn" href="#/categorias">Ajustar</a>')}${limitsCard(d, ym, { max: 4 })}` : ''}
       ${sectionHead('Próximos vencimentos', '<a class="link-btn" href="#/cartoes">Cartões</a>')}
       ${duesCard(d)}
       ${sectionHead('Últimos gastos', '<a class="link-btn" href="#/compras">Ver todos</a>')}

@@ -25,14 +25,16 @@ export function expenseRow(d, e, opts = {}) {
   const gid = e.groupId || e.id;
   const inst = e.instTotal > 1 ? `<span class="badge">${e.instIndex}/${e.instTotal}</span> ` : '';
   const rec = e.recurring ? '<span class="badge accent"><i class="fas fa-rotate"></i></span> ' : '';
-  const meta = [opts.showDate ? shortDate(e.purchaseDate) : e.time, pay.name, cat.name].filter(Boolean).map(esc).join(' · ');
+  const meta = [opts.showDate ? shortDate(e.purchaseDate) : e.time, pay.name, cat.name].filter(Boolean).map(esc).join(' · ')
+    + (e.tags?.length ? ` · ${e.tags.map((t) => '#' + esc(t)).join(' ')}` : '');
+  const marks = `${e.note ? '<i class="fas fa-note-sticky" title="Tem nota"></i> ' : ''}${e.receiptId ? '<i class="fas fa-paperclip" title="Tem comprovante"></i> ' : ''}`;
   const act = opts.trash ? '' : opts.bulk ? 'data-act="bulk-toggle"' : 'data-act="edit-expense"';
   return `<div class="list-row ${opts.trash ? 'is-trash' : 'tap'} ${opts.selected ? 'is-selected' : ''}" ${act} data-gid="${esc(gid)}" data-id="${esc(e.id)}" ${opts.trash ? '' : 'role="button" tabindex="0"'}>
     ${opts.bulk ? '<span class="select-dot"><i class="fas fa-check"></i></span>' : ''}
     ${chip(cat.color, cat.icon)}
     <div class="list-row__main">
       <div class="list-row__title">${esc(e.desc)}</div>
-      <div class="list-row__meta">${inst}${rec}${meta}</div>
+      <div class="list-row__meta">${inst}${rec}${marks}${meta}</div>
     </div>
     <div class="list-row__value">${m(e.amount)}</div>
     ${opts.trailing || ''}

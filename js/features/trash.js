@@ -7,7 +7,7 @@ import { expenseRow } from '../ui/parts.js';
 import { emptyState } from '../ui/illustrations.js';
 import { confirmSheet } from '../ui/sheet.js';
 import { toast } from '../ui/toast.js';
-import { restoreGroups, purgeGroups } from './expense-actions.js';
+import { restoreGroups, purgeGroups, cleanupReceipts } from './expense-actions.js';
 
 export default {
   id: 'lixeira',
@@ -33,7 +33,8 @@ export default {
     },
     'empty-trash': async () => {
       if (await confirmSheet({ title: 'Esvaziar a lixeira?', text: 'Todas as compras da lixeira somem para sempre.', confirm: 'Esvaziar', danger: true })) {
-        store.commit((s) => { s.trash = []; }); toast('Lixeira esvaziada');
+        const gone = store.get().trash;
+        store.commit((s) => { s.trash = []; }); cleanupReceipts(gone); toast('Lixeira esvaziada');
       }
     },
   },

@@ -160,13 +160,17 @@ export function daysWithoutSpending(d, today = todayISO()) {
 // ---------------------------------------------------------------------------
 // Filtros (categoria múltipla, forma de pagamento, texto) — como no AeroSync
 // ---------------------------------------------------------------------------
-export const emptyFilter = () => ({ cats: [], card: 'all', text: '' });
-export const isFilterActive = (f) => !!f && (f.cats.length > 0 || f.card !== 'all' || !!f.text);
+export const emptyFilter = () => ({ cats: [], card: 'all', text: '', tags: [] });
+export const isFilterActive = (f) => !!f && (f.cats.length > 0 || f.card !== 'all' || !!f.text || !!f.tags?.length);
 export function matchesFilter(e, f) {
   if (!f) return true;
   if (f.cats.length && !f.cats.includes(e.catId)) return false;
   if (f.card !== 'all' && (e.cardId || 'pix') !== f.card) return false;
-  if (f.text && !fold(e.desc).includes(fold(f.text))) return false;
+  if (f.tags?.length && !f.tags.some((t) => (e.tags || []).includes(t))) return false;
+  if (f.text) {
+    const q = fold(f.text);
+    if (!fold(e.desc).includes(q) && !fold(e.note).includes(q) && !(e.tags || []).some((t) => fold(t).includes(q.replace(/^#/, '')))) return false;
+  }
   return true;
 }
 

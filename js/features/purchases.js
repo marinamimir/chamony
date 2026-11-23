@@ -10,16 +10,17 @@ import { emptyState } from '../ui/illustrations.js';
 import { openSheet } from '../ui/sheet.js';
 import { toast } from '../ui/toast.js';
 import { trashGroups, bulkEdit } from './expense-actions.js';
+import { allTags } from './expense-form.js';
 
 export function filterBar(d, f) {
   const active = F.isFilterActive(f);
   const catNames = f.cats.map((id) => d.categories.find((c) => c.id === id)?.name).filter(Boolean);
   const payName = f.card === 'all' ? '' : F.payMethod(d, f.card).name;
-  const summary = [catNames.length ? catNames.join(', ') : '', payName, f.text ? `“${f.text}”` : ''].filter(Boolean).join(' · ');
+  const summary = [catNames.length ? catNames.join(', ') : '', payName, (f.tags || []).map((t) => '#' + t).join(' '), f.text ? `“${f.text}”` : ''].filter(Boolean).join(' · ');
   return `<div class="row mb-3">
     <label class="grow" style="position:relative">
       <i class="fas fa-magnifying-glass subtle" style="position:absolute;left:16px;top:50%;transform:translateY(-50%)"></i>
-      <input class="input" type="search" id="flt-text" placeholder="Buscar compra" value="${esc(f.text)}" style="padding-left:42px" enterkeyhint="search">
+      <input class="input" type="search" id="flt-text" placeholder="Buscar compra, nota ou #tag" value="${esc(f.text)}" style="padding-left:42px" enterkeyhint="search">
     </label>
     <button type="button" class="icon-btn filled" data-act="open-filters" aria-label="Filtros" style="${active ? 'color:var(--ui-accent)' : ''}">
       <i class="fas fa-sliders"></i></button>
@@ -28,13 +29,15 @@ export function filterBar(d, f) {
 }
 
 export function openFilters(d, ui, rerender) {
-  const f = structuredClone(ui.filter);
+  const f = { tags: [], ...structuredClone(ui.filter) };
+  const tags = allTags(d);
   const render = () => `
     <span class="label">Categorias</span>
     <div class="pills wrap mb-3">${d.categories.map((c) => `<button type="button" class="pill" data-fcat="${esc(c.id)}" style="--c:${safeColor(c.color)}" aria-pressed="${f.cats.includes(c.id)}"><i class="fas ${safeIcon(c.icon)}"></i>${esc(c.name)}</button>`).join('')}</div>
     <span class="label">Forma de pagamento</span>
     <div class="pills wrap">${[['all', 'Todas', '#A7B0C2', 'fa-layer-group'], ['pix', 'Pix / Conta', '#8FD3B6', 'fa-bolt'], ...d.cards.map((c) => [c.id, c.name, c.color, 'fa-credit-card'])]
-      .map(([id, name, color, icon]) => `<button type="button" class="pill" data-fcard="${esc(id)}" style="--c:${safeColor(color)}" aria-pressed="${f.card === id}"><i class="fas ${icon}"></i>${esc(name)}</button>`).join('')}</div>`;
+      .map(([id, name, color, icon]) => `<button type="button" class="pill" data-fcard="${esc(id)}" style="--c:${safeColor(color)}" aria-pressed="${f.card === id}"><i class="fas ${icon}"></i>${esc(name)}</button>`).join('')}</div>
+    ${tags.length ? `<span class="label mt-3">Tags</span><div class="pills wrap">${tags.map((t) => `<button type="button" class="pill" data-ftag="${esc(t)}" aria-pressed="${f.tags.includes(t)}">#${esc(t)}</button>`).join('')}</div>` : ''}`;
   openSheet({
     title: 'Filtros',
     body: render(),
@@ -45,6 +48,8 @@ export function openFilters(d, ui, rerender) {
         if (c) { const id = c.dataset.fcat; f.cats = f.cats.includes(id) ? f.cats.filter((x) => x !== id) : [...f.cats, id]; api.setBody(render()); }
         const k = e.target.closest('[data-fcard]');
         if (k) { f.card = k.dataset.fcard; api.setBody(render()); }
+        const tg = e.target.closest('[data-ftag]');
+        if (tg) { const t = tg.dataset.ftag; f.tags = f.tags.includes(t) ? f.tags.filter((x) => x !== t) : [...f.tags, t]; api.setBody(render()); }
         if (e.target.closest('[data-clear]')) { ui.filter = F.emptyFilter(); api.close(); rerender(); }
         if (e.target.closest('[data-apply]')) { ui.filter = f; api.close(); rerender(); }
       });

@@ -2,7 +2,7 @@
 
 import * as store from '../store.js';
 import { esc, uid, safeColor } from '../core/dom.js';
-import { m } from '../core/money.js';
+import { m, fmt, attachMoneyMask } from '../core/money.js';
 import { CAT_COLORS, CAT_ICONS } from '../store.js';
 import * as F from '../core/finance.js';
 import { chip, colorPicks, bindFreeColor } from '../ui/parts.js';
@@ -21,11 +21,13 @@ export function openCategoryForm(catId = null) {
     <div class="pills wrap">${CAT_ICONS.map((i) => `<button type="button" class="icon-pick" data-icon="${i}" aria-pressed="${st.icon === i}" aria-label="${i.replace('fa-', '')}"><i class="fas ${i}"></i></button>`).join('')}</div>`;
   openSheet({
     title: c ? 'Editar categoria' : 'Nova categoria',
-    body: `<label class="field"><span>Nome</span><input class="input" id="cat-name" maxlength="40" placeholder="Ex.: Farmácia, Livros" value="${esc(c?.name || '')}" ${c ? '' : 'autofocus'}></label><div id="cat-picks">${picks()}</div>`,
+    body: `<label class="field"><span>Nome</span><input class="input" id="cat-name" maxlength="40" placeholder="Ex.: Farmácia, Livros" value="${esc(c?.name || '')}" ${c ? '' : 'autofocus'}></label>
+      <label class="field"><span>Limite por mês (opcional)</span><input class="input" id="cat-limit"></label><div id="cat-picks">${picks()}</div>`,
     foot: `<div class="btn-row">${c ? '<button type="button" class="btn danger" data-del style="flex:0 0 auto" aria-label="Excluir categoria"><i class="fas fa-trash"></i></button>' : ''}
       <button type="button" class="btn primary" data-save>${c ? 'Salvar' : 'Criar categoria'}</button></div>`,
     onMount(el, api) {
       bindFreeColor(el, (c) => { st.color = c; el.querySelector('#cat-picks').innerHTML = picks(); });
+      const limit = attachMoneyMask(el.querySelector('#cat-limit'), d.budget.catLimits[catId] || 0);
       el.addEventListener('click', async (e) => {
         const col = e.target.closest('[data-color]');
         if (col) { st.color = col.dataset.color; el.querySelector('#cat-picks').innerHTML = picks(); }
@@ -40,7 +42,10 @@ export function openCategoryForm(catId = null) {
               Object.assign(cur, { name, ...st });
               // Atualiza a "foto" guardada nas compras desta categoria.
               s.expenses.concat(s.trash).forEach((x) => { if (x.catId === cur.id) x.catSnap = F.catSnapshot(cur); });
-            } else s.categories.push({ id: uid('c'), name, ...st });
+            }
+            const id = cur?.id || uid('c');
+            if (!cur) s.categories.push({ id, name, ...st });
+            if (limit.get() > 0) s.budget.catLimits[id] = limit.get(); else delete s.budget.catLimits[id];
           });
           api.close(); toast(c ? 'Categoria atualizada' : 'Categoria criada');
         }
@@ -66,7 +71,7 @@ export default {
       <div class="list">${d.categories.map((c) => `
         <div class="list-row tap" role="button" tabindex="0" data-act="edit-cat" data-id="${esc(c.id)}">
           ${chip(c.color, c.icon)}
-          <div class="list-row__main"><div class="list-row__title">${esc(c.name)}</div><div class="list-row__meta">Neste mês</div></div>
+          <div class="list-row__main"><div class="list-row__title">${esc(c.name)}</div><div class="list-row__meta">${d.budget.catLimits[c.id] ? `limite ${fmt(d.budget.catLimits[c.id])}/mês` : 'Neste mês'}</div></div>
           <div class="list-row__value">${m(sumOf(c.id))}</div>
           <i class="fas fa-chevron-right subtle"></i>
         </div>`).join('')}</div>

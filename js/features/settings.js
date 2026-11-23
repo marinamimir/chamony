@@ -12,6 +12,7 @@ import * as aero from '../data/aerosync.js';
 import { mergeData, replaceData } from '../data/merge.js';
 import { APP_VERSION } from '../version.js';
 import { appearanceSection, appearanceActions } from './appearance.js';
+import * as reminders from '../data/reminders.js';
 
 const countGroups = (list) => new Set((list || []).map((e) => e.groupId || e.id)).size;
 
@@ -66,25 +67,39 @@ export function openAeroPreview(found) {
   });
 }
 
-function openChamonyPreview(data, exportedAt) {
-  const when = exportedAt ? new Date(exportedAt).toLocaleString('pt-BR') : 'data desconhecida';
+function openChamonyPreview(res) {
+  const { data, exportedAt, receipts } = res;
+  const fmtDT = (iso) => (iso ? new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'desconhecida');
+  const local = store.get().meta.updatedAt;
+  const fileNewer = exportedAt && (!local || exportedAt > local);
+  const isSync = res.kind === 'sync';
+  const markSync = () => store.commit((s) => { s.settings.lastSyncAt = new Date().toISOString(); });
   openSheet({
-    title: 'Restaurar backup',
-    body: `<div class="notice mb-3"><i class="fas fa-box-archive"></i><span>Backup do ChaMony de ${esc(when)}.</span></div>
+    title: isSync ? 'Puxar sincronização' : 'Restaurar backup',
+    body: `<div class="notice mb-3"><i class="fas fa-box-archive"></i><span>Arquivo do ChaMony salvo em <b>${esc(fmtDT(exportedAt))}</b>. Última alteração neste aparelho: <b>${esc(fmtDT(local))}</b>.</span></div>
+      ${isSync ? `<p class="small muted mb-3">${fileNewer ? 'O arquivo é <b>mais novo</b>: o recomendado é usar o arquivo.' : 'Este aparelho tem alterações <b>mais novas</b> que o arquivo. Juntar mantém tudo daqui e só acrescenta o que faltar.'}</p>` : ''}
       <div class="kv"><span>Compras</span><b>${countGroups(data.expenses)}</b></div>
-      <div class="kv"><span>Cartões</span><b>${data.cards.length}</b></div>
-      <div class="kv"><span>Categorias</span><b>${data.categories.length}</b></div>
-      <div class="kv"><span>Contas</span><b>${data.banks.length}</b></div>
-      <div class="kv"><span>Entradas extras</span><b>${data.incomes.length}</b></div>`,
-    foot: `<div class="stack"><button type="button" class="btn primary block" data-replace>Restaurar (substitui tudo)</button>
-      <button type="button" class="btn ghost block" data-merge>Juntar com o que já tenho</button></div>`,
+      <div class="kv"><span>Cartões · categorias · contas</span><b>${data.cards.length} · ${data.categories.length} · ${data.banks.length}</b></div>
+      <div class="kv"><span>Metas · assinaturas · investimentos</span><b>${data.goals.length} · ${data.subscriptions.length} · ${data.investments.length}</b></div>
+      <div class="kv"><span>Fotos de comprovante</span><b>${receipts.length}</b></div>`,
+    foot: `<div class="stack"><button type="button" class="btn ${!isSync || fileNewer ? 'primary' : 'ghost'} block" data-replace>${isSync ? 'Usar o arquivo (substitui este aparelho)' : 'Restaurar (substitui tudo)'}</button>
+      <button type="button" class="btn ${isSync && !fileNewer ? 'primary' : 'ghost'} block" data-merge>Juntar com o que já tenho</button>
+      <p class="tiny subtle center">Juntar só acrescenta o que falta: edições e exclusões feitas no outro aparelho não passam. Dá para desfazer logo depois.</p></div>`,
     onMount(el, api) {
-      el.addEventListener('click', (e) => {
+      el.addEventListener('click', async (e) => {
         if (e.target.closest('[data-replace]')) {
-          store.replaceAll(data); api.close();
-          toast('Backup restaurado', { action: { label: 'Desfazer', fn: () => store.restorePrevious() }, duration: 7000 });
+          api.close();
+          await backup.restoreReceipts(receipts);
+          store.replaceAll(data);
+          if (isSync) markSync();
+          toast(isSync ? 'Sincronizado com o arquivo' : 'Backup restaurado', { action: { label: 'Desfazer', fn: () => store.restorePrevious() }, duration: 7000 });
         }
-        if (e.target.closest('[data-merge]')) { finishImport(mergeData(store.get(), data), 'backup ChaMony'); api.close(); }
+        if (e.target.closest('[data-merge]')) {
+          api.close();
+          await backup.restoreReceipts(receipts);
+          finishImport(mergeData(store.get(), data), isSync ? 'sincronização' : 'backup ChaMony');
+          if (isSync) markSync();
+        }
       });
     },
   });
@@ -94,7 +109,7 @@ async function handleFile(file) {
   if (!file) return;
   try {
     const res = backup.identify(await backup.readFileText(file));
-    if (res.type === 'chamony') openChamonyPreview(res.data, res.exportedAt);
+    if (res.type === 'chamony') openChamonyPreview(res);
     else openAeroPreview(res.found);
   } catch (err) {
     toast(err.message || 'Não foi possível ler o arquivo');
@@ -146,6 +161,22 @@ export default {
         <p class="tiny subtle mt-2">“Enviar” abre o menu do Android: dá para salvar direto no Google Drive.</p>
       </section>
 
+      ${sectionHead('Sincronizar com outro aparelho')}
+      <section class="card">
+        <p class="small muted mb-3">Use uma pasta do Google Drive como ponte: <b>Enviar</b> aqui e <b>Puxar</b> no outro aparelho (e vice-versa). É sempre manual: o navegador não acessa o Drive sozinho.</p>
+        <div class="btn-row mb-2"><button type="button" class="btn ghost" data-act="sync-push"><i class="fas fa-cloud-arrow-up"></i>Enviar</button>
+          <button type="button" class="btn ghost" data-act="sync-pull"><i class="fas fa-cloud-arrow-down"></i>Puxar</button></div>
+        <p class="tiny subtle">${s.lastSyncAt ? `Última sincronização: ${esc(new Date(s.lastSyncAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }))}` : 'Ainda não sincronizado.'}</p>
+      </section>
+
+      ${sectionHead('Lembretes no celular')}
+      <section class="card">
+        <div class="setting-row"><div><b>Avisar vencimentos</b><small>Faturas, contas, assinaturas e dívidas, com a antecedência que você escolheu</small></div>
+          ${toggle(s.notifications && reminders.support().permission === 'granted', 'notif-toggle', 'Avisar vencimentos')}</div>
+        ${s.notifications ? `<p class="tiny subtle mt-2">${reminders.support().periodic ? 'O Android confere os vencimentos cerca de 1 vez por dia (o horário exato é decidido pelo Chrome) e também quando você abre o app.' : 'Os avisos chegam quando você abre o app. Instale o ChaMony (menu ⋮ → Instalar app) para receber também em segundo plano.'}</p>
+          <button type="button" class="btn sm ghost mt-2" data-act="notif-test"><i class="fas fa-bell"></i>Testar notificação</button>` : ''}
+      </section>
+
       <section class="card ${query?.has('importar') ? 'highlight' : ''}" id="aerosync">
         <div class="row mb-2"><img src="icons/logo.svg" alt="" width="34" height="34"><div class="grow"><b class="strong">Trazer do AeroSync</b><div class="tiny muted">Todas as abas de Finanças: compras, parcelas, cartões, salário, contas…</div></div></div>
         ${localAero
@@ -177,8 +208,30 @@ export default {
     'toggle-setting': (el) => setSetting(el.dataset.key, !store.get().settings[el.dataset.key]),
     limit: () => openLimitSheet(),
     'warn-days': (el) => setSetting('dueWarnDays', Math.min(15, Math.max(1, store.get().settings.dueWarnDays + Number(el.dataset.delta)))),
-    export: () => { backup.downloadBackup(store.get()); toast('Backup exportado'); },
+    export: async () => { await backup.downloadBackup(store.get()); toast('Backup exportado'); },
     share: async () => { try { await backup.shareBackup(store.get()); } catch (err) { if (err?.name !== 'AbortError') toast('Não foi possível compartilhar'); } },
+    'sync-push': async () => {
+      try {
+        const shared = backup.canShareFiles() ? await backup.shareBackup(store.get(), 'sync') : false;
+        if (!shared) await backup.downloadBackup(store.get(), 'sync');
+        store.commit((s) => { s.settings.lastSyncAt = new Date().toISOString(); });
+        toast(shared ? 'Escolha o Drive e a mesma pasta de sempre' : 'Arquivo de sincronização salvo em Downloads');
+      } catch (err) { if (err?.name !== 'AbortError') toast('Não foi possível gerar o arquivo'); }
+    },
+    'sync-pull': (_, { root }) => root.querySelector('#import-input').click(),
+    'notif-toggle': async (el, { rerender }) => {
+      const on = !store.get().settings.notifications;
+      if (on) {
+        const r = await reminders.enable();
+        toast(r.msg, { duration: 6000 });
+        if (!r.ok) return;
+      } else await reminders.disable();
+      store.commit((s) => { s.settings.notifications = on; });
+      await reminders.writeReminders(store.get());
+      if (on) reminders.checkNow();
+      rerender();
+    },
+    'notif-test': async () => { try { await reminders.testNotification(); } catch { toast('Não foi possível mostrar a notificação'); } },
     'import-file': (_, { root }) => root.querySelector('#import-input').click(),
     'import-local': () => { const f = aero.readLocal(); if (f) openAeroPreview(f); },
     'undo-import': async () => {

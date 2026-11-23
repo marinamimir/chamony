@@ -8,6 +8,24 @@ import { firstBillingYM, groupRows, catSnapshot } from '../core/finance.js';
 import { openSheet } from '../ui/sheet.js';
 import { toast } from '../ui/toast.js';
 import { trashGroups } from './expense-actions.js';
+import { putReceipt, getReceipt, deleteReceipt, compressImage } from '../data/idb.js';
+import { feedback } from '../ui/feedback.js';
+
+/** Todas as tags já usadas, das mais frequentes para as menos. */
+export function allTags(d) {
+  const n = new Map();
+  d.expenses.forEach((e) => (e.tags || []).forEach((t) => n.set(t, (n.get(t) || 0) + 1)));
+  return [...n.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t);
+}
+const parseTags = (s) => String(s || '').split(/[,#]/).map((t) => t.trim().toLowerCase()).filter(Boolean).slice(0, 12);
+
+/** Abre a foto do comprovante em tela cheia. */
+export async function showReceipt(id) {
+  const rec = await getReceipt(id).catch(() => null);
+  if (!rec) { toast('Comprovante não encontrado neste aparelho'); return; }
+  const url = URL.createObjectURL(rec.blob);
+  openSheet({ title: 'Comprovante', body: `<img src="${url}" alt="Foto do comprovante" style="width:100%;border-radius:18px">`, onClose: () => setTimeout(() => URL.revokeObjectURL(url), 500) });
+}
 
 /** Sugere a categoria pela última compra com a mesma descrição (aprende com o que já foi categorizado). */
 function suggestCategory(d, desc) {
@@ -28,7 +46,13 @@ export function openExpenseForm({ groupId = null, preset = {} } = {}) {
     catId: first?.catId || preset.catId || d.categories[0]?.id || '',
     inst: first?.instTotal || 1,
     touchedCat: isEdit,
+    tags: [...(first?.tags || preset.tags || [])],
+    receiptId: first?.receiptId || null,
+    newPhoto: null,       // Blob comprimido ainda não salvo
+    removePhoto: false,
+    favorite: d.favorites.some((f) => f.desc.toLowerCase() === (first?.desc || preset.desc || '').toLowerCase()),
   };
+  const knownTags = allTags(d).slice(0, 12);
   const descs = [...new Set(d.expenses.slice(-300).map((e) => e.desc))].slice(-80);
   const cards = d.cards.filter((c) => c.active || c.id === state.cardId);
 
@@ -59,7 +83,18 @@ export function openExpenseForm({ groupId = null, preset = {} } = {}) {
         <div class="row" style="min-height:48px"><button type="button" class="toggle" role="switch" id="ef-rec" aria-checked="${!!first?.recurring}" aria-label="Compra recorrente"></button>
         <small class="muted small">todo mês</small></div></div>
     </div>
-    <div class="notice" id="ef-hint" aria-live="polite"><i class="fas fa-calendar-check"></i><span></span></div>`;
+    <div class="notice" id="ef-hint" aria-live="polite"><i class="fas fa-calendar-check"></i><span></span></div>
+    <details class="more" ${first?.note || first?.tags?.length || first?.receiptId ? 'open' : ''}>
+      <summary><i class="fas fa-chevron-down"></i>Mais detalhes <span class="tiny subtle">notas, tags, comprovante</span></summary>
+      <label class="field"><span>Notas</span><textarea class="textarea" id="ef-note" maxlength="1000" rows="2" placeholder="Algo para lembrar depois…">${esc(first?.note || '')}</textarea></label>
+      <label class="field"><span>Tags</span><input class="input" id="ef-tags" placeholder="Ex.: viagem, presente (separe por vírgula)" autocomplete="off"></label>
+      <div class="pills wrap mb-3" id="ef-tagpills"></div>
+      <span class="label">Comprovante</span>
+      <div class="row mb-3" id="ef-photo"></div>
+      <input type="file" id="ef-file" accept="image/*" capture="environment" hidden>
+      <div class="setting-row"><div><b>Favorito</b><small>Aparece como atalho no teclado rápido</small></div>
+        <button type="button" class="toggle" role="switch" id="ef-fav" aria-checked="${state.favorite}" aria-label="Favorito"></button></div>
+    </details>`;
 
   const foot = `<div class="btn-row">
     ${isEdit ? '<button type="button" class="btn danger" data-del style="flex:0 0 auto"><i class="fas fa-trash"></i></button>' : ''}
@@ -83,12 +118,48 @@ export function openExpenseForm({ groupId = null, preset = {} } = {}) {
       };
       hint();
 
+      const tagPills = () => {
+        const extra = parseTags(q('#ef-tags').value);
+        const all = [...new Set([...state.tags, ...knownTags])];
+        q('#ef-tagpills').innerHTML = all.map((t) => `<button type="button" class="pill" data-tag="${esc(t)}" aria-pressed="${state.tags.includes(t)}">#${esc(t)}</button>`).join('')
+          + (extra.length ? `<span class="tiny subtle">+ ${extra.map((t) => '#' + esc(t)).join(' ')}</span>` : '');
+      };
+      tagPills();
+      q('#ef-tags').addEventListener('input', tagPills);
+      let thumbUrl = null;
+      const photo = async () => {
+        if (thumbUrl) { URL.revokeObjectURL(thumbUrl); thumbUrl = null; }
+        let blob = state.newPhoto;
+        if (!blob && state.receiptId && !state.removePhoto) blob = (await getReceipt(state.receiptId).catch(() => null))?.blob;
+        if (blob) thumbUrl = URL.createObjectURL(blob);
+        q('#ef-photo').innerHTML = blob
+          ? `<button type="button" class="receipt-thumb" data-view aria-label="Ver comprovante"><img src="${thumbUrl}" alt=""></button>
+             <button type="button" class="btn sm ghost" data-photo><i class="fas fa-camera"></i>Trocar</button>
+             <button type="button" class="icon-btn sm danger" data-nophoto aria-label="Remover foto"><i class="fas fa-xmark"></i></button>`
+          : '<button type="button" class="btn sm ghost" data-photo><i class="fas fa-camera"></i>Tirar ou escolher foto</button>';
+      };
+      photo();
+      q('#ef-file').addEventListener('change', async (e) => {
+        const f = e.target.files[0]; e.target.value = '';
+        if (!f) return;
+        try { state.newPhoto = await compressImage(f); state.removePhoto = false; photo(); } catch { toast('Não consegui abrir essa imagem'); }
+      });
+
       el.addEventListener('click', (e) => {
         const pay = e.target.closest('[data-pay]');
         if (pay) { state.cardId = pay.dataset.pay; q('#ef-pay').innerHTML = payPills(); hint(); return; }
         const cat = e.target.closest('[data-cat]');
         if (cat) { state.catId = cat.dataset.cat; state.touchedCat = true; q('#ef-cats').innerHTML = catPills(); return; }
         if (e.target.closest('#ef-rec')) rec.setAttribute('aria-checked', rec.getAttribute('aria-checked') !== 'true');
+        const fav = e.target.closest('#ef-fav'); if (fav) { state.favorite = !state.favorite; fav.setAttribute('aria-checked', state.favorite); }
+        const tg = e.target.closest('[data-tag]');
+        if (tg) { const t = tg.dataset.tag; state.tags = state.tags.includes(t) ? state.tags.filter((x) => x !== t) : [...state.tags, t]; tagPills(); }
+        if (e.target.closest('[data-photo]')) q('#ef-file').click();
+        if (e.target.closest('[data-nophoto]')) { state.newPhoto = null; state.removePhoto = true; photo(); }
+        if (e.target.closest('[data-view]')) {
+          if (state.newPhoto) { const u = URL.createObjectURL(state.newPhoto); openSheet({ title: 'Comprovante', body: `<img src="${u}" alt="" style="width:100%;border-radius:18px">` }); }
+          else if (state.receiptId) showReceipt(state.receiptId);
+        }
       });
       ['#ef-date', '#ef-inst', '#ef-val'].forEach((s) => q(s).addEventListener('change', hint));
       q('#ef-inst').addEventListener('input', hint);
@@ -101,7 +172,7 @@ export function openExpenseForm({ groupId = null, preset = {} } = {}) {
         }
       });
 
-      q('[data-save]').addEventListener('click', () => {
+      q('[data-save]').addEventListener('click', async () => {
         const amount = money.get();
         const desc = q('#ef-desc').value.trim();
         if (!(amount > 0)) { toast('Digite o valor da compra'); q('#ef-val').focus(); return; }
@@ -111,6 +182,16 @@ export function openExpenseForm({ groupId = null, preset = {} } = {}) {
         const n = clampInt(q('#ef-inst').value, 1, 48, 1);
         const recurring = rec.getAttribute('aria-checked') === 'true';
         const gid = groupId || uid('g');
+        const tags = [...new Set([...state.tags, ...parseTags(q('#ef-tags').value)])].slice(0, 12);
+        const note = q('#ef-note').value.trim();
+        let receiptId = state.removePhoto ? null : state.receiptId;
+        try {
+          if (state.newPhoto) {
+            if (state.receiptId) await deleteReceipt(state.receiptId).catch(() => {});
+            receiptId = uid('rc');
+            await putReceipt({ id: receiptId, blob: state.newPhoto, createdAt: new Date().toISOString() });
+          } else if (state.removePhoto && state.receiptId) await deleteReceipt(state.receiptId).catch(() => {});
+        } catch { toast('Não consegui guardar a foto; a compra foi salva sem ela.'); receiptId = null; }
         store.commit((s) => {
           const cat = s.categories.find((c) => c.id === state.catId);
           if (groupId) s.expenses = s.expenses.filter((x) => (x.groupId || x.id) !== groupId);
@@ -118,12 +199,18 @@ export function openExpenseForm({ groupId = null, preset = {} } = {}) {
             s.expenses.push({
               id: `${gid}_${i + 1}`, groupId: gid, desc, amount: part, purchaseDate: date, time,
               cardId: state.cardId, catId: state.catId, catSnap: catSnapshot(cat),
-              instIndex: i + 1, instTotal: n, recurring, note: first?.note || '', createdAt: first?.createdAt || new Date().toISOString(),
+              instIndex: i + 1, instTotal: n, recurring, note, tags, ...(receiptId ? { receiptId } : {}),
+              createdAt: first?.createdAt || new Date().toISOString(), ...(first?.source ? { source: first.source } : {}),
             });
           });
+          // Favoritos (atalhos do teclado rápido)
+          const key = desc.toLowerCase();
+          s.favorites = s.favorites.filter((f) => f.desc.toLowerCase() !== key);
+          if (state.favorite) s.favorites.unshift({ id: uid('fav'), desc, amount, catId: state.catId, cardId: state.cardId });
         });
         api.close();
-        if (navigator.vibrate && !isEdit) navigator.vibrate(12);
+        if (thumbUrl) URL.revokeObjectURL(thumbUrl);
+        feedback('save');
         toast(isEdit ? 'Compra atualizada' : 'Compra registrada 🌼');
       });
 
